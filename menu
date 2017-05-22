@@ -73,9 +73,10 @@ main_menu(){
 	echo -e "${MENU}**${NUMBER} 1)${MENUITEM} Info Menu --> ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 2)${MENUITEM} Mount Net Shares ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 3)${MENUITEM} Auto Network Backup Data ${NORMAL}"
-	echo -e "${MENU}**${NUMBER} 4)${MENUITEM} Start CPU Stressing ${NORMAL}"
-	echo -e "${MENU}**${NUMBER} 5)${MENUITEM} Search the Logs ${NORMAL}"
-	echo -e "${MENU}**${NUMBER} 6)${MENUITEM} Shutdown the PC ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 4)${MENUITEM} Auto Network Restore Data ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 5)${MENUITEM} Start CPU Stressing ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 6)${MENUITEM} Search the Logs ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 7)${MENUITEM} Shutdown the PC ${NORMAL}"
 	echo -e "${MENU}*************************************************${NORMAL}"
 	echo -e "${MENU}**${INFO} Connected to the internet: $NETUP ${NORMAL}"
 	echo -e "${MENU}**${INFO} Server Access: $SERVUP ${NORMAL}"
@@ -110,18 +111,23 @@ do
 		main_menu;
             	;;
 
-        4) clear;
+	4) clear;
+            	tmux new-window -n "dataRestore" "$PWD/Files/restoreUserData.sh"
+		main_menu;
+            	;;
+
+        5) clear;
             	sudo "$PWD/Files/cpuStress.sh";
             	tmux select-window -t "GCC:cpuStress"
 		main_menu;
 		;;
 
-    	5) clear;
+    	6) clear;
             	tmux new-window -n "logQuery" "$PWD/Files/logQuery.sh"
 		main_menu;
             	;;
 
-	6) clear;
+	7) clear;
 		sudo umount -alt cifs;
 		sudo umount ~/winMount;
 		sleep 3

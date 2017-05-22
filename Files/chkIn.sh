@@ -30,19 +30,19 @@ PRINTFILE=$(mktemp)
 echo '							                Computer Resource' >> $PRINTFILE
 echo '					   "Your Computer Resource for All Your Computer Needs"' >> $PRINTFILE
 echo '								          Hwy 90 Location' >> $PRINTFILE
-echo "									 PC ID: $PCID" >> $PRINTFILE
+echo "									       PC ID: $PCID" >> $PRINTFILE
 echo '------------------------------------------------------------------------------------------------------------------------------------' >> $PRINTFILE
 echo >> $PRINTFILE
 echo "Customer Name:   $CUSNAME" >> $PRINTFILE
-echo '				  ------------------------------			     Repair Recommended: _________________________' >> $PRINTFILE
+echo '			     -----------------------------			Repair Recommended: _________________________' >> $PRINTFILE
 echo "Phone Number:   $PHONENUMBER" >> $PRINTFILE
-echo '                           ------------------------------				     			 _________________________' >> $PRINTFILE
+echo '                           -------------------				     			            	      _________________________' >> $PRINTFILE
 echo "Does it power on and POST:   $POWERON" >> $PRINTFILE
-echo '					  ---						        Estimated Price: _________________________' >> $PRINTFILE
+echo '					        ---						   Estimated Price: _________________________' >> $PRINTFILE
 echo "Dropping off the charger:   $CHARGER" >> $PRINTFILE
-echo '				        ---					        Customer Confirmed Date: _________________________' >> $PRINTFILE
+echo '				           ---					  Customer Confirmed Date: _________________________' >> $PRINTFILE
 echo "Computer Password:   $PASSWORD" >> $PRINTFILE
-echo '				        ---------------------			      Finish Date & Final Price: _________________________' >> $PRINTFILE
+echo '				   ------------------------		   Finish Date & Final Price: _________________________' >> $PRINTFILE
 echo >> $PRINTFILE
 echo '-----------------------' >> $PRINTFILE
 echo ' INITIAL ISSUES' >>$PRINTFILE
@@ -75,7 +75,7 @@ echo '**A $45 fee may apply if we have to disassemble your laptop to find the pr
 echo '**BY SIGNING THIS PAPER, YOU ARE AGREEING TO OUR TERMS AND CONDITIONS**' >> $PRINTFILE
 echo >> $PRINTFILE
 echo >> $PRINTFILE
-echo -e "									$(today_date)" >> $PRINTFILE
+echo -e "														     $(today_date)" >> $PRINTFILE
 echo ' __________________________________________				________________' >> $PRINTFILE
 echo '			  Customer Signature							   	    Date' >> $PRINTFILE
 echo >> $PRINTFILE

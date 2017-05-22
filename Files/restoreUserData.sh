@@ -21,14 +21,15 @@ choose_partition() {
 	read BLKID
 	echo "Making a mount directory ..."
 	mkdir ~/winMount 2>/dev/null
-	printf "Attempting to mount partion read-only ... "
-	sudo mount -r $BLKID ~/winMount 2>/dev/null
+	printf "Attempting to mount partion with write access ... "
+	sudo ntfsfix $BLKID > /dev/null 2>/dev/null
+	sudo ntfs-3g -o remove_hiberfile,rw $BLKID ~/winMount 2>/dev/null
 	winDir=$(mount | grep "$BLKID" | awk '{print $3}')
 	if [ "$winDir/Users" ]; then
 		echo "SUCCESS"
 	else
 		echo "FAIL"
-		echo "Now exiting ..."
+		echo "Could not mount HDD with write access. Now exiting ..."
 		sleep 2
 		exit
 	fi
@@ -62,8 +63,9 @@ if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
                         echo "no"
                         echo "Making a mount directory ..."
                         mkdir ~/winMount 2>/dev/null
-                        printf "Attempting to automount Windows partion read-only ... "
-                        sudo mount -r $winMount ~/winMount 2>/dev/null
+                        printf "Attempting to automount Windows partion with write access ... "
+			sudo ntfsfix $winMount
+                        sudo ntfs-3g -o remove_hiberfile,rw $winMount ~/winMount 2>/dev/null
                         winDir=$(mount | grep "$winMount" | awk '{print $3}')
                         if [ -d "$winDir/Users" ]; then
                                 echo "successful"
@@ -84,23 +86,20 @@ else
 	echo yes
 	choose_partition
 fi
-echo Accumulating data size of backup. Please wait.
-echo -e "Approximate size of user data is $(du -sh $winDir/Users | awk '{print $1}')."
-printf "Do you wish to continue with the network backup (y/n): "
-read CONTINUE
 
-[ "$CONTINUE" == 'n' -o "$CONTINUE" == 'N' ] && echo "Cancelling backup. Now exiting ..." && sleep 2 && exit
+echo 'Starting backup restoration to folder "BACKUP" on the root of the windows partition'
 
-[ ! -d "$PCFOLDER/dataBackup" ] && mkdir "$PCFOLDER/dataBackup"
-BACKUPLOCATION="$PCFOLDER/dataBackup/current"
-mkdir "$BACKUPLOCATION"
+RESTORESOURCE="$PCFOLDER/dataBackup/current"
+mkdir "$winDir/BACKUP"
+RESTOREDESTINATION="$winDir/BACKUP"
 echo
 
-sudo rsync -rhPt --links --copy-unsafe-links --info=progress2 "$winDir/Users/" "$BACKUPLOCATION"
-sudo chmod -R 777 "$BACKUPLOCATION"
-echo -e "[$(c_timestamp)] Backup of user data was completed." >> "$PCFOLDER/log";
+sudo rsync -rhPt --links --copy-unsafe-links --info=progress2 "$RESTORESOURCE" "$RESTOREDESTINATION"
+
+echo -e "[$(c_timestamp)] Restore of user data was completed." >> "$PCFOLDER/log";
+
 echo
-echo "Data transfer complete."
+echo "Data restore complete."
 sleep 2
 exit
 

@@ -29,6 +29,58 @@ function c_timestamp() {
         date | awk '{print $2,$3,$4}'
 }
 
+choose_HDD() {
+	winDir="NA"
+	printf 'Would you like to enter the HDD BLKID for testing? [y/n]'
+	read -p ': ' ans2
+	if [ $ans2 == y ]; then
+		lsblk
+		echo
+		printf 'Please enter BLKID of HDD: '
+		read hddID
+	elif [ $ans2 == n ]; then
+		echo 'Skipping all HDD tests ...'
+		hddID=
+	fi
+}
+
+choose_partition() {
+	winDir='NA'
+	echo '********************************************************************'
+	printf 'Could not automount Windows Partition. Would you like to type in the BLKID of the partition (/dev/sdX1) now? [y/n]'
+	read -p ': ' ans1
+	if [ $ans1 == y ]; then
+		lsblk
+		echo
+		printf 'Please enter partition BLKID: '
+		read  winMount
+		echo "Making a mount directory ..."
+		mkdir ~/winMount 2>/dev/null
+		printf "Attempting to mount partition read-only ... "
+		sudo mount -r $winMount ~/winMount 2>/dev/null
+		winDir=$(mount | grep "$winMount" | awk '{print $3}')
+		hddID=${winMount%?}
+		if [ -d "$winDir/Users" ]; then
+			echo "SUCCESS"
+		else 
+			echo "FAIL"
+			echo "COULD NOT MOUNT WINDOWS PARTION!"
+			sleep 1
+			sudo umount $winMount
+			choose_HDD
+		fi
+	elif [ $ans1 == n ]; then
+		echo 'Skipping mounting of Windows partition ...'
+		choose_HDD
+	else
+		echo "Invalid Choice. Choose Again."
+		sleep 2
+		choose_partition
+	fi
+	echo '********************************************************************'
+
+}
+
 #check for root priveledges
 if [ "$EUID" -ne 0 ]
 	then echo "This script must be ran as root."
@@ -110,7 +162,7 @@ if [ ! $SMARTCTL ]; then #Check to see if smartctl is installed
 else echo yes
 fi
 
-#Try to auto mount Windows Partion
+#Try to auto mount Windows Partition
   #declare HDD specific variables
 winMount=$(sudo fdisk -l | grep -v '*' | grep -iE '(HPFS/NTFS/exFAT|Microsoft basic data)' | awk {'print $1'})
 winDir=$(mount | grep "$winMount" | awk '{print $3}') 
@@ -130,56 +182,24 @@ if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
 			echo "no"
 			echo "Making a mount directory ..."
 			mkdir ~/winMount 2>/dev/null
-			printf "Attempting to automount Windows partion read-only ... "
+			printf "Attempting to automount Windows partition read-only ... "
 			sudo mount -r $winMount ~/winMount 2>/dev/null
 			winDir=$(mount | grep "$winMount" | awk '{print $3}')
 			if [ "$winDir/Users" ]; then
 				echo "successful"
-			else echo "failed"
+			else 
+				echo "failed"
+				sudo umount $winMount
+				choose_partition
 			fi
 		else echo "yes"
 		fi
 	else 
 		echo "no"
-		winDir="NA"
+		choose_partition
 	fi
 else
 	echo yes
-	echo '********************************************************************'
-	printf 'Could not automount Windows Partition. Would you like to type in the BLKID of the partition (/dev/sdX1) now? [y/n]'
-	read -p ': ' ans1
-	if [ $ans1 == y ]; then
-		lsblk
-		echo
-		printf 'Please enter partion BLKID: '
-		read  winMount
-		echo "Making a mount directory ..."
-		mkdir ~/winMount 2>/dev/null
-		printf "Attempting to mount partion read-only ... "
-		sudo mount -r $winMount ~/winMount 2>/dev/null
-		winDir=$(mount | grep "$winMount" | awk '{print $3}')
-		hddID=${winMount%?}
-		if [ "$winDir/Users" ]; then
-			echo "SUCCESS"
-		else 
-			echo "FAIL"
-		fi
-	elif [ $ans1 == n ]; then
-		echo 'Skipping mounting of Windows partition ...'
-		winDir="NA"
-		printf 'Would you like to enter the HDD BLKID for testing? [y/n]'
-		read -p ': ' ans2
-		if [ $ans2 == y ]; then
-			lsblk
-			echo
-			printf 'Please enter BLKID of HDD: '
-			read hddID
-		elif [ $ans2 == n ]; then
-			echo 'Skipping all HDD tests ...'
-			hddID=
-		fi
-	fi
-	echo '********************************************************************'
 
 fi
 ###HDD/WINDOWS STUFF###
@@ -204,7 +224,7 @@ echo Trying to get Windows Version ...
 winVersion=''
 if [ $winDir != NA ]; then
 	winver winVersion
-else winVersion="Windows Partion not mounted"
+else winVersion="Windows Partition not mounted"
 fi
 
 ###END HDD/WINDOWS STUFF###
@@ -354,7 +374,6 @@ chmod 777 "$saveLocation"
 
 sudo echo "Y" > "$PCFOLDER/ranLogs"
 
-read nul
 #Show log
 cat "$saveLocation" | less
 
