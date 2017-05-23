@@ -35,7 +35,7 @@ choose_partition() {
 }
 
 #Using PC ID set the PC folder location and the Customer Folder location in variables
-PCFOLDER=$(find ./* -name "$PCID")
+PCFOLDER=$(find ./* -maxdepth 6 -name "$PCID")
 CUSFOLDER=$(echo "${PCFOLDER%/*}")
 echo
 
@@ -84,8 +84,9 @@ else
 	echo yes
 	choose_partition
 fi
-echo Accumulating data size of backup. Please wait.
-echo -e "Approximate size of user data is $(du -sh $winDir/Users | awk '{print $1}')."
+echo "Accumulating data size of backup. Please wait."
+SOURCESIZE=$(du -sh $winDir/Users | awk '{print $1}')
+echo "Approximate size of user data is $SOURCESIZE."
 printf "Do you wish to continue with the network backup (y/n): "
 read CONTINUE
 
@@ -93,11 +94,16 @@ read CONTINUE
 
 [ ! -d "$PCFOLDER/dataBackup" ] && mkdir "$PCFOLDER/dataBackup"
 BACKUPLOCATION="$PCFOLDER/dataBackup/current"
-mkdir "$BACKUPLOCATION"
+mkdir "$BACKUPLOCATION" 2>/dev/null
 echo
 
-sudo rsync -rhPt --links --copy-unsafe-links --info=progress2 "$winDir/Users/" "$BACKUPLOCATION"
+sudo rsync -rht --info=progress2 "$winDir/Users/" "$BACKUPLOCATION" 2>/dev/null
 sudo chmod -R 777 "$BACKUPLOCATION"
+echo "Comparing sizes between source and destination."
+DESTSIZE=$(du -sh $BACKUPLOCATION | awk '{print $1}')
+echo
+echo "Source was $winDir/Users/, size $SOURCESIZE; Destination was $BACKUPLOCATION, size $DESTSIZE."
+read -p 'Press enter to finish.' nul
 echo -e "[$(c_timestamp)] Backup of user data was completed." >> "$PCFOLDER/log";
 echo
 echo "Data transfer complete."

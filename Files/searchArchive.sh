@@ -14,7 +14,7 @@ c_timestamp() {
 
 find_archive() {
 	old_IFS=$IFS
-	for i in $(find "$PCFOLDER" -type f | grep -v -E '(location|notes|log|status|check_in|dataBackup|info)'); do
+	for i in $(find "$PCFOLDER" -maxdepth 6 -type f | grep -v -E '(location|notes|log|status|check_in|dataBackup|info)'); do
 	                IFS=
 	                archiveArray+=($i)
 	        done
@@ -238,7 +238,7 @@ if [ "$PCID" == "c" ]; then
 	echo
 
 	old_IFS=$IFS
-	for i in $(find . -type f -name "info.cus"); do
+	for i in $(find . -maxdepth 6 -type f -name "info.cus"); do
 	        IFS=
 	        nameArray+=($(egrep -i "$searchName" "$i"| head -n 1))
 		tempVar=$(egrep -il "$searchName" "$i")
@@ -316,7 +316,7 @@ if [ "$PCID" == "c" ]; then
 exit 0
 fi
 
-PCFOLDER=$(find ./* -name "$PCID")
+PCFOLDER=$(find ./* -maxdepth 6 -name "$PCID")
 CUSFOLDER=$(echo "${PCFOLDER%/*}")
 if [ ! "$PCFOLDER" ]; then
         echo "ERROR: PC ID COULD NOT BE FOUND. PLEASE CHECK FOLDER AND TRY AGAIN."

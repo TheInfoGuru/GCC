@@ -15,7 +15,7 @@ c_timestamp() {
 find_PC() {
 	echo
 	old_IFS=$IFS
-	for i in $(find "$CUSFOLDER" -type f -name "log")
+	for i in $(find "$CUSFOLDER" -maxdepth 6 -type f -name "log")
 	        do
 	                IFS=
 	                idDisplayArray+=($(echo $i | grep -o 'ID[0-9]'))
@@ -81,6 +81,7 @@ make_report() {
 	echo >> "$TMPREPORT"
 	echo '****************************CUSTOMER INFO****************************' >> "$TMPREPORT"
 	cat "$CUSFOLDER/info.cus" >> "$TMPREPORT"
+	echo >> "$TMPREPORT"
 
 	if [ -f "$PCFOLDER/location" ]; then
 		echo '******************************LOCATION*******************************' >> "$TMPREPORT"
@@ -121,7 +122,7 @@ if [ "$PCID" == "c" ]; then
 	echo
 
 	old_IFS=$IFS
-	for i in $(find . -type f -name "info.cus"); do
+	for i in $(find . -maxdepth 6 -type f -name "info.cus"); do
 	        IFS=
 	        nameArray+=($(egrep -i "$searchName" "$i"| head -n 1))
 		tempVar=$(egrep -il "$searchName" "$i")
@@ -199,7 +200,7 @@ if [ "$PCID" == "c" ]; then
 exit 0
 fi
 
-PCFOLDER=$(find ./* -name "$PCID")
+PCFOLDER=$(find ./* -maxdepth 6 -name "$PCID")
 CUSFOLDER=$(echo "${PCFOLDER%/*}")
 IDNUMBER=$PCID
 

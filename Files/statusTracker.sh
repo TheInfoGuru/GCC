@@ -9,7 +9,7 @@ read FILTER
 echo >> "$TRACKERFILE"
 echo "Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?" >> "$TRACKERFILE"
 echo "--------------------------*-----*---------*-----------------------*-------------*---------------------*--" >> "$TRACKERFILE"
-for i in $(find ./* -type f -name 'log'); do
+for i in $(find ./* -maxdepth 6 -type f -name 'log'); do
 	PCFOLDER=$(echo "${i%/*}")
 	CUSFOLDER=$(echo "${PCFOLDER%/*}")
 	CUSNAME=$(cat "$CUSFOLDER/info.cus" | head -n 1)

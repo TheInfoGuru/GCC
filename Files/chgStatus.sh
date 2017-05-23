@@ -10,7 +10,7 @@ printf "Please enter the PC ID or scan it off the computer: "
 read PCID
 echo
 
-PCFOLDER=$(find ./* -name "$PCID")
+PCFOLDER=$(find ./* -maxdepth 6 -name "$PCID")
 CUSFOLDER=$(echo "${PCFOLDER%/*}")
 
 if [ ! "$PCFOLDER" ]; then

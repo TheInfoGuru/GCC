@@ -100,7 +100,7 @@ echo
 
 if [ "$PCID" == "n" ]; then
 	#Store variables
-	IDCOUNT=$(find ./* -type f -name '.IDCOUNT')
+	IDCOUNT=$(find ./* -maxdepth 6 -type f -name '.IDCOUNT')
 	PCID=$(cat "$IDCOUNT")
 
 	#Display to user the next available PC ID
@@ -114,9 +114,9 @@ if [ "$PCID" == "n" ]; then
 	echo
 
 	#Set more variables (locations)
-	CUSFOLDER=$(find ./* -name "info.cus" -exec egrep -il "$CUSNAME" {} \;)
+	CUSFOLDER=$(find ./* -maxdepth 6 -name "info.cus" -exec egrep -il "$CUSNAME" {} \;)
 	CUSFOLDER=$(echo ${CUSFOLDER%/*})
-	LOGSFOLDER=$(find ./* -name 'CustomerLogs')
+	LOGSFOLDER=$(find ./* -maxdepth 6 -name 'CustomerLogs')
 
 	#Check if customer doesn't have a folder
 	if [ ! $CUSFOLDER ]; then
@@ -166,7 +166,7 @@ else
 	################################################### NEXT PART ############################################################################
 
 	#Using PC ID set the PC folder location and the Customer Folder location in variables
-	PCFOLDER=$(find ./* -name "$PCID")
+	PCFOLDER=$(find ./* -maxdepth 6 -name "$PCID")
 	CUSFOLDER=$(echo "${PCFOLDER%/*}")
 	CUSNAME=$(cat "$CUSFOLDER/info.cus" | head -n 1)
 	PHONENUMBER=$(cat "$CUSFOLDER/info.cus" | head -n 2 | tail -n 1)

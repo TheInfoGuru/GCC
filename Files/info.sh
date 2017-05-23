@@ -289,7 +289,7 @@ if [ "$PCID" == "o" ]; then
 	PCFOLDER="$PWD/Files/CustomerLogs/Other"
 	saveLocation="$PWD/Files/CustomerLogs/Other/$fileName"
 else
-	PCFOLDER=$(find . -type d -name $PCID)
+	PCFOLDER=$(find . -maxdepth 6 -type d -name $PCID)
 	saveLocation="$PCFOLDER/info"
 fi
 

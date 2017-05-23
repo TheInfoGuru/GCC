@@ -36,7 +36,7 @@ choose_partition() {
 }
 
 #Using PC ID set the PC folder location and the Customer Folder location in variables
-PCFOLDER=$(find ./* -name "$PCID")
+PCFOLDER=$(find ./* -maxdepth 6 -name "$PCID")
 CUSFOLDER=$(echo "${PCFOLDER%/*}")
 echo
 
@@ -90,14 +90,19 @@ fi
 echo 'Starting backup restoration to folder "BACKUP" on the root of the windows partition'
 
 RESTORESOURCE="$PCFOLDER/dataBackup/current"
-mkdir "$winDir/BACKUP"
+mkdir "$winDir/BACKUP" 2>/dev/null
 RESTOREDESTINATION="$winDir/BACKUP"
 echo
 
-sudo rsync -rhPt --links --copy-unsafe-links --info=progress2 "$RESTORESOURCE" "$RESTOREDESTINATION"
+sudo rsync -rht --info=progress2 "$RESTORESOURCE" "$RESTOREDESTINATION" 2>/dev/null
 
+echo
+echo "Comparing source and destination sizes. Please wait."
+SOURCESIZE=$(du -sh "$RESTORESOURCE" | awk '{print $1}')
+DESTSIZE=$(du -sh "$RESTOREDESTINATION" | awk '{print $1}')
+echo "Source location is $RESTORESOURCE, size $SOURCESIZE; Destination location is $RESTOREDESTINATION, size $DESTSIZE."
+read -p 'Press enter to finish.' nul
 echo -e "[$(c_timestamp)] Restore of user data was completed." >> "$PCFOLDER/log";
-
 echo
 echo "Data restore complete."
 sleep 2
