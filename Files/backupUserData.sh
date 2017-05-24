@@ -12,6 +12,11 @@ read PCID
 
 #fi
 
+printf "Skip backing up AppData folders (Y/n): "
+read SKIPAPPDATA
+
+[ "$SKIPAPPDATA" != "y" ] && [ "$SKIPAPPDATA" != "n" ] && [ "$SKIPAPPDATA" != '' ] && echo 'You must say either "y" or "n"!' && sleep 2 && exit
+[ "$SKIPAPPDATA" == '' ] && SKIPAPPDATA=y
 choose_partition() {
 	echo '********************************************************************'
 	echo 'Could not automount Windows Partition. Please manually enter the BLKID of the partition (/dev/sdX1) now'
@@ -84,8 +89,18 @@ else
 	echo yes
 	choose_partition
 fi
+
 echo "Accumulating data size of backup. Please wait."
-SOURCESIZE=$(du -sh $winDir/Users | awk '{print $1}')
+if [ "$SKIPAPPDATA" == "y" ]; then
+	SOURCESIZE=$(du -sh --exclude='AppData*' $winDir/Users | awk '{print $1}')
+elif [ "$SKIPAPPDATA" == "n" ]; then
+	SOURCESIZE=$(du -sh $winDir/Users | awk '{print $1}')
+else
+	echo "How the hell did you get here?"
+	sleep 2
+	exit
+fi
+
 echo "Approximate size of user data is $SOURCESIZE."
 printf "Do you wish to continue with the network backup (y/n): "
 read CONTINUE
@@ -97,7 +112,16 @@ BACKUPLOCATION="$PCFOLDER/dataBackup/current"
 mkdir "$BACKUPLOCATION" 2>/dev/null
 echo
 
-sudo rsync -rht --info=progress2 "$winDir/Users/" "$BACKUPLOCATION" 2>/dev/null
+if [ "$SKIPAPPDATA" == "y" ]; then
+	sudo rsync -rht --exclude 'AppData' --info=progress2 "$winDir/Users/" "$BACKUPLOCATION" 2>/dev/null
+elif [ "$SKIPAPPDATA" == "n" ]; then
+	sudo rsync -rht --info=progress2 "$winDir/Users/" "$BACKUPLOCATION" 2>/dev/null
+else
+	echo "How the hell did you get here?"
+	sleep 2
+	exit
+fi
+
 sudo chmod -R 777 "$BACKUPLOCATION"
 echo "Comparing sizes between source and destination."
 DESTSIZE=$(du -sh $BACKUPLOCATION | awk '{print $1}')
