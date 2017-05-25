@@ -129,7 +129,7 @@ do
 
 	7) clear;
 		sudo umount -alt cifs;
-		sudo umount ~/winMount;
+		sudo umount ~/winMount 2>/dev/null;
 		sleep 3
 		shutdown now;
 		exit;

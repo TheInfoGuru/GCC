@@ -153,6 +153,9 @@ if [ "$PCID" == "n" ]; then
 
 		#If not correct, open in editor
 		[ "$updateInfo" == "y" ] && nano "$CUSFOLDER/info.cus"
+		
+		#Get Phone Number
+		PHONENUMBER=$(cat "$CUSFOLDER/info.cus" | head -n 2 | tail -n 1)
 	fi
 
 	#Make new folder for new computer under PC ID name

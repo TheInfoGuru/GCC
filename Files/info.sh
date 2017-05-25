@@ -200,6 +200,7 @@ if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
 	fi
 else
 	echo yes
+	choose_partition
 
 fi
 ###HDD/WINDOWS STUFF###
@@ -213,7 +214,7 @@ fi
 #Try to get User Data size if hdd is mounted
 if [ ! "$getData" == "n" ]; then
 	echo Trying to calculate approximate user data size ...
-	if [ $winDir != NA ]; then
+	if [ "$winDir" != "NA" ]; then
 		userData=$(du -sh $winDir/Users/ | awk '{print $1}')
 	else userData=NA
 	fi
@@ -222,7 +223,7 @@ fi
 #Maybe get windows version
 echo Trying to get Windows Version ...
 winVersion=''
-if [ $winDir != NA ]; then
+if [ "$winDir" != "NA" ]; then
 	winver winVersion
 else winVersion="Windows Partition not mounted"
 fi
@@ -376,4 +377,3 @@ sudo echo "Y" > "$PCFOLDER/ranLogs"
 
 #Show log
 cat "$saveLocation" | less
-
