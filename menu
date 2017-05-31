@@ -9,8 +9,7 @@ ID=$(id -u)
 
 TMUXINSTALLED=$(type tmux 2>/dev/null)
 
-echo "Installing TMUX. Please wait ..."
-[ ! "$TMUXINSTALLED" ] && sudo apt install -yqq tmux > /dev/null 2>/dev/null
+[ ! "$TMUXINSTALLED" ] && echo "Installing TMUX. Please wait ..." && sudo apt install -yqq tmux > /dev/null 2>/dev/null
 
 #CHECK IF IN TMUX SESSION GCC
 [ ! "$TMUX" ] && tmux a -t "GCC:menu" 2>/dev/null || tmux new-session -s "GCC" $0 \; rename-window "menu" \; set mouse on 2>/dev/null \; && exit

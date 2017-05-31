@@ -13,7 +13,7 @@ for i in $(find ./* -maxdepth 6 -type f -name 'log'); do
 	PCFOLDER=$(echo "${i%/*}")
 	CUSFOLDER=$(echo "${PCFOLDER%/*}")
 	CUSNAME=$(cat "$CUSFOLDER/info.cus" | head -n 1)
-	PCID=$(echo "$PCFOLDER" | egrep -o "ID[0-9]?[0-9]?[0-9]")
+	PCID=$(echo "$PCFOLDER" | egrep -o "ID[0-9]?[0-9]?[0-9]?[0-9]")
 	LOCATION=$(cat "$PCFOLDER/location")
 	PCSTATUS=$(cat "$PCFOLDER/status")
 	CHKINDATE=$(cat "$PCFOLDER/check_in")

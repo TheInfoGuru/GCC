@@ -185,7 +185,7 @@ if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
 			printf "Attempting to automount Windows partition read-only ... "
 			sudo mount -r $winMount ~/winMount 2>/dev/null
 			winDir=$(mount | grep "$winMount" | awk '{print $3}')
-			if [ "$winDir/Users" ]; then
+			if [ -d "$winDir/Users" ]; then
 				echo "successful"
 			else 
 				echo "failed"
