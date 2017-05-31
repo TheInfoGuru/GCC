@@ -189,7 +189,7 @@ if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
 				echo "successful"
 			else 
 				echo "failed"
-				sudo umount $winMount
+				sudo umount -l $winMount
 				choose_partition
 			fi
 		else echo "yes"
