@@ -165,8 +165,14 @@ fi
 #Try to auto mount Windows Partition
   #declare HDD specific variables
 winMount=$(sudo fdisk -l | grep -v '*' | grep -iE '(HPFS/NTFS/exFAT|Microsoft basic data)' | awk {'print $1'})
-winDir=$(mount | grep "$winMount" | awk '{print $3}') 
+if [ -d $HOME/winMount/Users ]; then
+	winDir=$HOME/winMount
+else
+	winDir=$(mount | grep "$winMount" | awk '{print $3}')
+fi
+
 strCheck=${#winMount}
+
 if [ $strCheck -eq 9 ]; then
         hddID=${winMount%?}
 elif [ $strCheck -eq 14 ]; then
@@ -189,7 +195,7 @@ if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
 				echo "successful"
 			else 
 				echo "failed"
-				sudo umount $winMount
+				sudo umount -l $winMount
 				choose_partition
 			fi
 		else echo "yes"
@@ -215,7 +221,7 @@ fi
 if [ ! "$getData" == "n" ]; then
 	echo Trying to calculate approximate user data size ...
 	if [ "$winDir" != "NA" ]; then
-		userData=$(du -sh $winDir/Users/ | awk '{print $1}')
+		userData=$(du -sh $winDir/Users/ 2> /dev/null | awk '{print $1}')
 	else userData=NA
 	fi
 fi

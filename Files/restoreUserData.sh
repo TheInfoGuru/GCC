@@ -98,8 +98,8 @@ sudo rsync -rht --info=progress2 "$RESTORESOURCE" "$RESTOREDESTINATION" 2>/dev/n
 
 echo
 echo "Comparing source and destination sizes. Please wait."
-SOURCESIZE=$(du -sh "$RESTORESOURCE" | awk '{print $1}')
-DESTSIZE=$(du -sh "$RESTOREDESTINATION" | awk '{print $1}')
+SOURCESIZE=$(du -sh "$RESTORESOURCE" | awk '{print $1}' 2>/dev/null)
+DESTSIZE=$(du -sh "$RESTOREDESTINATION" | awk '{print $1}' 2>/dev/null)
 echo "Source location is $RESTORESOURCE, size $SOURCESIZE; Destination location is $RESTOREDESTINATION, size $DESTSIZE."
 read -p 'Press enter to finish.' nul
 echo -e "[$(c_timestamp)] Restore of user data was completed." >> "$PCFOLDER/log";

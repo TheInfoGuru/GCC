@@ -55,7 +55,12 @@ fi
 #Try to auto mount Windows Partion
   #declare HDD specific variables
 winMount=$(sudo fdisk -l | grep -v '*' | grep -iE '(HPFS/NTFS/exFAT|Microsoft basic data)' | awk {'print $1'})
-winDir=$(mount | grep "$winMount" | awk '{print $3}')
+if [ -d $HOME/winMount/Users ]; then
+	winDir=$HOME/winMount
+else
+	winDir=$(mount | grep "$winMount" | awk '{print $3}')
+fi
+
 strCheck=${#winMount}
 
 printf "Is there a possible windows drive ... "
@@ -74,7 +79,7 @@ if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
                                 echo "successful"
                         else
 				echo "failed"
-				sudo umount $winMount
+				sudo umount -l $winMount
 				choose_partition
                         fi
                 else echo "yes"
@@ -92,9 +97,9 @@ fi
 
 echo "Accumulating data size of backup. Please wait."
 if [ "$SKIPAPPDATA" == "y" ]; then
-	SOURCESIZE=$(du -sh --exclude='AppData*' $winDir/Users | awk '{print $1}')
+	SOURCESIZE=$(du -sh --exclude='AppData*' $winDir/Users | awk '{print $1}' 2>/dev/null)
 elif [ "$SKIPAPPDATA" == "n" ]; then
-	SOURCESIZE=$(du -sh $winDir/Users | awk '{print $1}')
+	SOURCESIZE=$(du -sh $winDir/Users | awk '{print $1}' 2>/dev/null)
 else
 	echo "How the hell did you get here?"
 	sleep 2
@@ -124,7 +129,7 @@ fi
 
 sudo chmod -R 777 "$BACKUPLOCATION"
 echo "Comparing sizes between source and destination."
-DESTSIZE=$(du -sh $BACKUPLOCATION | awk '{print $1}')
+DESTSIZE=$(du -sh $BACKUPLOCATION | awk '{print $1}' 2>/dev/null)
 echo
 echo "Source was $winDir/Users/, size $SOURCESIZE; Destination was $BACKUPLOCATION, size $DESTSIZE."
 read -p 'Press enter to finish.' nul

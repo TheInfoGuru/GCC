@@ -12,9 +12,18 @@ STRESS=$(command -v stress)
 TMUX=$(command -v tmux)
 HTOP=$(command -v htop)
 LSCPU=$(command -v lscpu)
+SENSORS=$(command -v sensors)
 
 echo "Downloading and setting stuff up. This may take a few minutes ..."
 echo "The TMUX session containing the stress test will pull up when it is ready."
+
+printf "Is sensors installed ..."
+if [ ! $SENSORS ]; then
+	echo " no"
+	echo "Installing sensors now ..."
+	sudo apt install sensors -yqq > /dev/null 2>/dev/null #if not installed
+else echo " yes"
+fi
 
 printf "Is stress installed ..."
 if [ ! $STRESS ]; then

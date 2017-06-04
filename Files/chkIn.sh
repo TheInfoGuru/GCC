@@ -22,6 +22,11 @@ today_date() {
 	date | awk '{print $2,$3,$6}'
 }
 
+up_id() {
+	echo -e "ID$(expr $(cat $IDCOUNT | cut -c 3-) + 1)" > "$IDCOUNT"
+}
+
+
 print_worksheet() {
 ####################################################### ACTUAL PRINTING OF THE DROPOFF SHEET #######################################################################
 
@@ -151,7 +156,7 @@ if [ "$PCID" == "n" ]; then
 
 		#If not correct, open in editor
 		[ "$updateInfo" == "y" ] && nano "$CUSFOLDER/info.cus"
-		
+
 		#Get Phone Number
 		PHONENUMBER=$(cat "$CUSFOLDER/info.cus" | head -n 2 | tail -n 1)
 	fi
@@ -160,8 +165,6 @@ if [ "$PCID" == "n" ]; then
 	PCFOLDER="$CUSFOLDER/$PCID"
 	mkdir "$PCFOLDER"
 	chmod -R 777 "$PCFOLDER"
-	echo -e "ID$(expr $(cat $IDCOUNT | cut -c 3-) + 1)" > "$IDCOUNT"
-
 else
 
 	################################################### NEXT PART ############################################################################
@@ -259,6 +262,7 @@ if [ -f "$PCFOLDER/log" ]; then
 	echo '*****************************'
 	echo '** PC has been checked in. **'
 	echo '*****************************'
+	up_id
 	sleep 2
 	exit
 else

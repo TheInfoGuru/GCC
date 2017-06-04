@@ -1,6 +1,12 @@
 #!/bin/bash
 
+clean_up() {
+	rm $TRACKERFILEFILTER 2> /dev/null
+	rm $TRACKERFILE 2> /dev/null
 
+}
+
+CODEWORD=working
 TRACKERFILE=$(mktemp)
 
 printf "Enter or scan filter tag (e.g. Need to Call, 1 Bench, Repair Complete, etc ...) or press enter for no filter: "
@@ -28,20 +34,19 @@ for i in $(find ./* -maxdepth 6 -type f -name 'log'); do
 	echo "$CUSNAME*$PCID*$LOCATION*$PCSTATUS*$CHKINDATE*$CONTACTSTATUS*$RANLOGS*$DATABACKUP" >> "$TRACKERFILE"
 done
 
-
 if [ "$FILTER" ]; then
 	TRACKERFILEFILTER=$(mktemp)
-	echo "Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?*Data Backup" >> "$TRACKERFILEFILTER"
+	echo "Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?*Data Backup" > "$TRACKERFILEFILTER"
 	echo "--------------------------*-----*---------*-----------------------*-------------*---------------------*-----------*-------------" >> "$TRACKERFILEFILTER"
-	grep -i "$FILTER" "$TRACKERFILE" >> "$TRACKERFILEFILTER"
-#	if [ ! -s "$TRACKERFILEFILTER" ]; then
-#		echo
-#		echo "NO PCs FOUND WITH CHOSEN FILTER."
-#		sleep 2
-#		exit
-#	fi
+	if [ "${FILTER,,}" == "${CODEWORD,,}" ]; then
+		grep -iv "Repair Complete" "$TRACKERFILE" >> "$TRACKERFILEFILTER"
+	else
+		grep -i "$FILTER" "$TRACKERFILE" >> "$TRACKERFILEFILTER"
+	fi
 	column -s '*' -t "$TRACKERFILEFILTER" | less
+	clean_up
 	exit
 fi
 
 column -s '*' -t "$TRACKERFILE" | less
+clean_up
