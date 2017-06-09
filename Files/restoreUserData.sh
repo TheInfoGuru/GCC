@@ -94,7 +94,7 @@ mkdir "$winDir/BACKUP" 2>/dev/null
 RESTOREDESTINATION="$winDir/BACKUP"
 echo
 
-sudo rsync -rht --info=progress2 "$RESTORESOURCE" "$RESTOREDESTINATION" 2>/dev/null
+sudo rsync -rht --exclude 'software' --exclude 'SOFTWARE' --info=progress2 "$RESTORESOURCE" "$RESTOREDESTINATION" 2>/dev/null
 
 echo
 echo "Comparing source and destination sizes. Please wait."

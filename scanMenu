@@ -60,6 +60,8 @@ main_menu(){
 	echo -e "${MENU}**${NUMBER} 8)${MENUITEM} Search For an Archived Check-In ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 9)${MENUITEM} Manually change IDCOUNT number ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 10)${MENUITEM} Reprint check-in sheet (Work In Progress) ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 11)${MENUITEM} Delete Customer Folder (DANGEROUS) ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 12)${MENUITEM} Delete PCID Folder (DANGEROUS) ${NORMAL}"
 	echo -e "${MENU}***********************************************************************${NORMAL}"
 	echo -e "${ENTER_LINE}Please enter a menu option or ${RED_TEXT}enter to exit. ${NORMAL}"
 	read -p ': ' optMain
@@ -113,6 +115,20 @@ do
 
 	9) clear;
 		tmux new-window -n ChangeIDCOUNT "nano ./Files/CustomerLogs/.IDCOUNT";
+		main_menu;
+            	;;
+
+	10) clear;
+		main_menu;
+            	;;
+
+	11) clear;
+		tmux new-window -n DeleteCustomer ./Files/delCustomer.sh;
+		main_menu;
+            	;;
+
+	12) clear;
+		tmux new-window -n DeletePCID ./Files/delPCID.sh;
 		main_menu;
             	;;
 

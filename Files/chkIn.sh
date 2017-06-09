@@ -22,6 +22,13 @@ today_date() {
 	date | awk '{print $2,$3,$6}'
 }
 
+LPR() {
+[ ! command -v enscript ] && echo "Installing enscript. Please wait." && sudo apt install -qqy enscript
+ENSCRIPT="--no-header --margins=36:36:36:36 --font=Times-Roman12 --word-wrap --media=Letter"
+export ENSCRIPT
+/usr/bin/enscript -p - $1 | /usr/bin/lpr
+}
+
 up_id() {
 	echo -e "ID$(expr $(cat $IDCOUNT | cut -c 3-) + 1)" > "$IDCOUNT"
 }

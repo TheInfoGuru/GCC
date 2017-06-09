@@ -72,7 +72,7 @@ case $actionID in
 		main;
 		;;
 
-	"In Repair"|"In Diagnostics"|"Repair Complete"|"No Repair Done"|"Waiting")
+	"In Repair"|"In Diagnostics"|"Repair Complete"|"No Repair Done"|"Waiting"|"Waiting (Part)"|"Waiting (Tech)"|"Waiting (Cust)")
 		echo "$actionID" > "$PCFOLDER/status";
 		echo -e "[$(c_timestamp)] Computer status was updated to $actionID." >> "$PCFOLDER/log";
 		echo '**************************************';

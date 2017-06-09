@@ -29,7 +29,7 @@ choose_partition() {
 	printf "Attempting to mount partion read-only ... "
 	sudo mount -r $BLKID ~/winMount 2>/dev/null
 	winDir=$(mount | grep "$BLKID" | awk '{print $3}')
-	if [ "$winDir/Users" ]; then
+	if [ -d $winDir/Users ]; then
 		echo "SUCCESS"
 	else
 		echo "FAIL"
@@ -119,8 +119,12 @@ echo
 
 if [ "$SKIPAPPDATA" == "y" ]; then
 	sudo rsync -rht --exclude 'AppData' --info=progress2 "$winDir/Users/" "$BACKUPLOCATION" 2>/dev/null
+	sudo rsync -rht --exclude 'AppData' --info=progress2 "$winDir/Windows/System32/config/SOFTWARE" "$BACKUPLOCATION" 2>/dev/null
+	sudo rsync -rht --exclude 'AppData' --info=progress2 "$winDir/Windows/System32/config/software" "$BACKUPLOCATION" 2>/dev/null
 elif [ "$SKIPAPPDATA" == "n" ]; then
 	sudo rsync -rht --info=progress2 "$winDir/Users/" "$BACKUPLOCATION" 2>/dev/null
+	sudo rsync -rht --info=progress2 "$winDir/Windows/System32/config/SOFTWARE" "$BACKUPLOCATION" 2>/dev/null
+	sudo rsync -rht --info=progress2 "$winDir/Windows/System32/config/software" "$BACKUPLOCATION" 2>/dev/null
 else
 	echo "How the hell did you get here?"
 	sleep 2
