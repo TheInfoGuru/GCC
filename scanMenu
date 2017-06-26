@@ -8,6 +8,8 @@ ID=$(id -u)
 [ "$ID" -eq 0 ] && echo "THIS SCRIPT SHOULD NOT BE RAN AS ROOT!" && sleep 2 && exit
 
 #CHECK IF IN TMUX SESSION Barcode
+[ "$1" == '--front' ] && tmux a -t "FrontCounter:menu" 2>/dev/null || tmux new-session -s "FrontCounter" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
+[ "$1" == '--jon' ] && tmux a -t "JON:menu" 2>/dev/null || tmux new-session -s "Jon" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
 [ ! "$TMUX" ] && tmux a -t "BarcodeMenu:menu" 2>/dev/null || tmux new-session -s "BarcodeMenu" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
 [ ! "$TMUX" ] && exit
 ############################################# FUNCTIONS ###################################################
@@ -60,19 +62,16 @@ main_menu(){
 	echo -e "${MENU}**${NUMBER} 8)${MENUITEM} Search For an Archived Check-In ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 9)${MENUITEM} Manually change IDCOUNT number ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 10)${MENUITEM} Reprint check-in sheet (Work In Progress) ${NORMAL}"
-	echo -e "${MENU}**${NUMBER} 11)${MENUITEM} Delete Customer Folder (DANGEROUS) ${NORMAL}"
-	echo -e "${MENU}**${NUMBER} 12)${MENUITEM} Delete PCID Folder (DANGEROUS) ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 11)${MENUITEM} List info files in Other folder ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 98)${MENUITEM} Delete PCID Folder (DANGEROUS) ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 99)${MENUITEM} Delete Customer Folder (DANGEROUS) ${NORMAL}"
 	echo -e "${MENU}***********************************************************************${NORMAL}"
-	echo -e "${ENTER_LINE}Please enter a menu option or ${RED_TEXT}enter to exit. ${NORMAL}"
+	echo -e "${ENTER_LINE}Please enter a menu option. ${NORMAL}"
 	read -p ': ' optMain
 
 while [ optMain != '' ]
 do
-	if [[ $optMain = "" ]]; then
-		clear
-		exit;
-	else
-		case $optMain in
+	case $optMain in
     	1) clear;
 	        tmux new-window -n Check-In ./Files/chkIn.sh;
 		main_menu;
@@ -123,24 +122,24 @@ do
             	;;
 
 	11) clear;
-		tmux new-window -n DeleteCustomer ./Files/delCustomer.sh;
+		tmux new-window -n SearchOther ./Files/findOther.sh;
 		main_menu;
-            	;;
+		;;
 
-	12) clear;
+	98) clear;
 		tmux new-window -n DeletePCID ./Files/delPCID.sh;
 		main_menu;
             	;;
 
-	\n)clear;
-        	exit
-		;;
+	99) clear;
+		tmux new-window -n DeleteCustomer ./Files/delCustomer.sh;
+		main_menu;
+            	;;
 
         *)clear;
         	main_menu;
         	;;
     esac
-fi
 done
 
 
