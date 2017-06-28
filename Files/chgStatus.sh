@@ -61,7 +61,7 @@ case $actionID in
 		main;
                 ;;
 
-        Contacted|"Need to Call"|"Left Voicemail"|"Could Not Reach"|"Customer Came In")
+        Contacted|"Need to Call"|"Left Voicemail"|"Could Not Reach"|"Cust Came In")
 		echo "$actionID" > "$PCFOLDER/contactStatus";
 		echo -e "[$(c_timestamp)] Phone log has been updated to $actionID." >> "$PCFOLDER/log";
 		echo '*************************************';

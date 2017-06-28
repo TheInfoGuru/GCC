@@ -71,7 +71,6 @@ rm -f "$CONTACTSTATUSFILE"
 
 DATABACKUPFOLDER="$PCFOLDER/dataBackup/current"
 CURRENTDATE=$(date "+%m%d%y")
-
 [ -d "$DATABACKUPFOLDER" ] && mv "$DATABACKUPFOLDER" "$PCFOLDER/dataBackup/$CURRENTDATE"
 
 echo

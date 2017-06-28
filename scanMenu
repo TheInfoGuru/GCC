@@ -3,14 +3,21 @@ clear
 
 HOSTNAME=$(hostname)
 ID=$(id -u)
+MENUTITLE=BarcodeMenu
 
 [ "$HOSTNAME" != "LServer" ] && echo "THIS SCRIPT SHOULD ONLY BE RAN ON THE MAIN SERVER!" && sleep 2 && exit
 [ "$ID" -eq 0 ] && echo "THIS SCRIPT SHOULD NOT BE RAN AS ROOT!" && sleep 2 && exit
 
 #CHECK IF IN TMUX SESSION Barcode
-[ "$1" == '--front' ] && tmux a -t "FrontCounter:menu" 2>/dev/null || tmux new-session -s "FrontCounter" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
-[ "$1" == '--jon' ] && tmux a -t "JON:menu" 2>/dev/null || tmux new-session -s "Jon" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
-[ ! "$TMUX" ] && tmux a -t "BarcodeMenu:menu" 2>/dev/null || tmux new-session -s "BarcodeMenu" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
+if [ ! "$TMUX" ]; then
+	if [ "$1" == '--jon' ]; then
+		[ ! "$TMUX" ] && tmux a -t "JonThan:menu" 2>/dev/null || tmux new-session -s "JonThan" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
+	elif [ "$1" == '--front' ]; then
+		[ ! "$TMUX" ] && tmux a -t "FrontCounter:menu" 2>/dev/null || tmux new-session -s "FrontCounter" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
+	else
+		[ ! "$TMUX" ] && tmux a -t "BarcodeMenu:menu" 2>/dev/null || tmux new-session -s "BarcodeMenu" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
+	fi
+fi
 [ ! "$TMUX" ] && exit
 ############################################# FUNCTIONS ###################################################
 

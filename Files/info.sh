@@ -292,14 +292,17 @@ fi
 
 #Make sure Customer Logs share is mounted
 if [ "$PCID" == "o" ]; then
-	fileName=$(echo "$fileName" | tr -d ' ')
 	PCFOLDER="$PWD/Files/CustomerLogs/Other"
+	if [ ! -d "$PCFOLDER" ]; then
+		mkdir "$PCFOLDER"
+		chmod -R 777 "$PCFOLDER"
+	fi
+	fileName=$(echo "$fileName" | tr -d ' ')
 	saveLocation="$PWD/Files/CustomerLogs/Other/$fileName"
 else
 	PCFOLDER=$(find . -maxdepth 6 -type d -name $PCID)
 	saveLocation="$PCFOLDER/info"
 fi
-
 
 #PRINT TO FILE
 echo Creating log file ...
@@ -379,7 +382,9 @@ fi
 
 chmod 777 "$saveLocation"
 
-sudo echo "Y" > "$PCFOLDER/ranLogs"
+if [ ! "$PCID" == "o" ]; then
+	sudo echo "Y" > "$PCFOLDER/ranLogs"
+fi
 
 #Show log
 cat "$saveLocation" | less
