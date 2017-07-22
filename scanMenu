@@ -72,6 +72,8 @@ main_menu(){
 	echo -e "${MENU}**${NUMBER} 11)${MENUITEM} List info files in Other folder ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 98)${MENUITEM} Delete PCID Folder (DANGEROUS) ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 99)${MENUITEM} Delete Customer Folder (DANGEROUS) ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 101)${MENUITEM} Start-of-Day/End-of-Day Totals ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 102)${MENUITEM} Search Drawer Totals ${NORMAL}"
 	echo -e "${MENU}***********************************************************************${NORMAL}"
 	echo -e "${ENTER_LINE}Please enter a menu option. ${NORMAL}"
 	read -p ': ' optMain
@@ -140,6 +142,16 @@ do
 
 	99) clear;
 		tmux new-window -n DeleteCustomer ./Files/delCustomer.sh;
+		main_menu;
+            	;;
+
+	101) clear;
+		tmux new-window -n DrawerCount ./Files/drawerCount.sh;
+		main_menu;
+            	;;
+
+	102) clear;
+		tmux new-window -n SearchDrawerCount ./Files/searchDrawerCount.sh;
 		main_menu;
             	;;
 

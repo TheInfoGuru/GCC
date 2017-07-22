@@ -279,4 +279,4 @@ else
 	exit
 fi
 
-exit 1
+exit
