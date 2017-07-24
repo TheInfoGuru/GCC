@@ -73,7 +73,9 @@ main_menu(){
 	echo -e "${MENU}**${NUMBER} 98)${MENUITEM} Delete PCID Folder (DANGEROUS) ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 99)${MENUITEM} Delete Customer Folder (DANGEROUS) ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 101)${MENUITEM} Start-of-Day/End-of-Day Totals ${NORMAL}"
-	echo -e "${MENU}**${NUMBER} 102)${MENUITEM} Search Drawer Totals ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 102)${MENUITEM} Add Cash Out ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 103)${MENUITEM} Add Cash In ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 104)${MENUITEM} Search Drawer Totals ${NORMAL}"
 	echo -e "${MENU}***********************************************************************${NORMAL}"
 	echo -e "${ENTER_LINE}Please enter a menu option. ${NORMAL}"
 	read -p ': ' optMain
@@ -151,6 +153,16 @@ do
             	;;
 
 	102) clear;
+		tmux new-window -n AddCashOut ./Files/addCashOut.sh;
+		main_menu;
+            	;;
+
+	103) clear;
+		tmux new-window -n AddCashIn ./Files/addCashIn.sh;
+		main_menu;
+            	;;
+
+	104) clear;
 		tmux new-window -n SearchDrawerCount ./Files/searchDrawerCount.sh;
 		main_menu;
             	;;

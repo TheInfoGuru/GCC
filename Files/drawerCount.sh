@@ -45,11 +45,20 @@ read -p 'Please enter number of 5s in drawer: ' ENDFIVE
 read -p 'Please enter number of 1s in drawer: ' ENDONE
 read -p 'Enter CASH QuickBooks total: $' QBTOTAL
 read -p 'Enter CC BATCH total: $' CCTOTAL
-read -p 'Enter any CASH out, or 0 if none: $' CASHOUT
-read -p 'Enter any CASH in, or 0 if none: $' CASHIN
 
-[ ! $CASHOUT ] && CASHOUT=0
-[ ! $CASHIN ] && CASHIN=0
+CASHIN=0
+CASHOUT=0
+CASHINFILE="~/currentCashIn"
+CASHOUTFILE="~/currentCashOut"
+CASHINAMOUNTS=$(cat $CASHINFILE)
+CASHOUTAMOUNTS=$(cat $CASHOUTFILE)
+
+for i in $CASHINAMOUNTS; do
+	CASHIN=$(expr $CASHIN + $i)
+done
+
+for j in $CASHOUTAMOUNTS; do
+	CASHOUT=$(expr $CASHOUT + $j)
 
 BEGBAL=$(grep -A 1 'Beginning Drawer Balance' $CURRENTLOCATION | grep -v 'Beginning Drawer Balance')
 
@@ -105,6 +114,8 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 rm $CURRENTLOCATION
+rm $CASHINFILE
+rm $CASHOUTFILE
 }
 
 
