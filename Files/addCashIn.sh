@@ -1,4 +1,5 @@
 #!/bin/bash
+cashInLocation="$HOME/.currentCashIn"
 
 get_input() {
 answer=y
@@ -12,4 +13,4 @@ if [ $answer == n ] 2> /dev/null ; then
 fi
 }
 get_input
-echo $cashIn >> ~/currentCashIn
+echo $cashIn >> "$cashInLocation"

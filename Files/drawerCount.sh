@@ -1,7 +1,7 @@
 #!/bin/bash
 clear
 
-CURRENTLOCATION="/home/emanruoy/.current_drawer"
+CURRENTLOCATION="$HOME/.current_drawer"
 STORELOCATION="$PWD/DrawerCounts"
 
 start_count() {
@@ -48,17 +48,18 @@ read -p 'Enter CC BATCH total: $' CCTOTAL
 
 CASHIN=0
 CASHOUT=0
-CASHINFILE="~/currentCashIn"
-CASHOUTFILE="~/currentCashOut"
-CASHINAMOUNTS=$(cat $CASHINFILE)
-CASHOUTAMOUNTS=$(cat $CASHOUTFILE)
+CASHINFILE="$HOME/.currentCashIn"
+CASHOUTFILE="$HOME/.currentCashOut"
+CASHINAMOUNTS=$(cat $CASHINFILE 2> /dev/null)
+CASHOUTAMOUNTS=$(cat $CASHOUTFILE 2> /dev/null)
 
 for i in $CASHINAMOUNTS; do
-	CASHIN=$(expr $CASHIN + $i)
+	CASHIN=$(expr $CASHIN + $i) 2> /dev/null
 done
 
 for j in $CASHOUTAMOUNTS; do
-	CASHOUT=$(expr $CASHOUT + $j)
+	CASHOUT=$(expr $CASHOUT + $j) 2> /dev/null
+done
 
 BEGBAL=$(grep -A 1 'Beginning Drawer Balance' $CURRENTLOCATION | grep -v 'Beginning Drawer Balance')
 
@@ -74,6 +75,8 @@ tput setaf 3
 echo
 echo "Your beginning drawer balance was: \$$BEGBAL"
 echo "Your ending drawer balance is: \$$ENDBAL"
+echo "Your total cash in today was: \$$CASHIN"
+echo "Your total cash out today was: \$$CASHOUT"
 echo
 echo "Your Cash Deposit should be \$$CASHDEPOSIT."
 echo
@@ -95,16 +98,22 @@ echo "Number of Fives . . . . . .$ENDFIVE" >> $CURRENTLOCATION
 echo "Number of Ones . . . . . . $ENDONE" >> $CURRENTLOCATION
 echo >> $CURRENTLOCATION
 echo "Ending Drawer Balance" >> $CURRENTLOCATION
-echo "$ENDBAL" >> $CURRENTLOCATION
+echo "\$$ENDBAL" >> $CURRENTLOCATION
 echo >> $CURRENTLOCATION
 echo "Ending QB Cash Total" >> $CURRENTLOCATION
-echo "$QBTOTAL" >> $CURRENTLOCATION
+echo "\$$QBTOTAL" >> $CURRENTLOCATION
 echo >> $CURRENTLOCATION
 echo "Ending CC Batch Total" >> $CURRENTLOCATION
-echo "$CCTOTAL" >> $CURRENTLOCATION
+echo "\$$CCTOTAL" >> $CURRENTLOCATION
+echo >> $CURRENTLOCATION
+echo "Cash Out For the Day" >> $CURRENTLOCATION
+echo "\$$CASHOUT" >> $CURRENTLOCATION
+echo >> $CURRENTLOCATION
+echo "Cash In For the Day" >> $CURRENTLOCATION
+echo "\$$CASHIN" >> $CURRENTLOCATION
 echo >> $CURRENTLOCATION
 echo "Actual Cash Deposit" >> $CURRENTLOCATION
-echo "$CASHDEPOSIT" >> $CURRENTLOCATION
+echo "\$$CASHDEPOSIT" >> $CURRENTLOCATION
 echo '###########################################################' >> $CURRENTLOCATION
 echo >> $CURRENTLOCATION
 cat $CURRENTLOCATION >> $STORELOCATION
@@ -114,8 +123,8 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 rm $CURRENTLOCATION
-rm $CASHINFILE
-rm $CASHOUTFILE
+rm $CASHINFILE 2> /dev/null
+rm $CASHOUTFILE 2> /dev/null
 }
 
 

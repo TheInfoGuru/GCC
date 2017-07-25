@@ -1,4 +1,5 @@
 #!/bin/bash
+cashOutLocation="$HOME/.currentCashOut"
 
 get_input() {
 answer=y
@@ -12,4 +13,4 @@ if [ $answer == n ] 2> /dev/null ; then
 fi
 }
 get_input
-echo $cashOut >> ~/currentCashOut
+echo $cashOut >> "$cashOutLocation"
