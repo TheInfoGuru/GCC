@@ -69,6 +69,8 @@ elif [ "$actionID" == '4B' ]; then
 	actionID='4 Bench'
 elif [ "$actionID" == '5B' ]; then
 	actionID='5 Bench'
+elif [ "$actionID" == 'FC' ]; then
+	actionID='Front Counter'
 fi
 
 case $actionID in
