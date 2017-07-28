@@ -35,6 +35,42 @@ printf "Please enter or scan the ActionID, press \"o\" for other location, or pr
 read actionID
 echo
 
+if [ "$actionID" == 'WC' ]; then
+	actionID='Waiting (Cust)'
+elif [ "$actionID" == 'WP' ]; then
+	actionID='Waiting (Part)'
+elif [ "$actionID" == 'WT' ]; then
+	actionID='Waiting (Tech)'
+elif [ "$actionID" == 'NTC' ]; then
+	actionID='Need to Call'
+elif [ "$actionID" == 'LVM' ]; then
+	actionID='Left Voicemail'
+elif [ "$actionID" == 'C' ]; then
+	actionID='Contacted'
+elif [ "$actionID" == 'CNR' ]; then
+	actionID='Could Not Reach'
+elif [ "$actionID" == 'IR' ]; then
+	actionID='In Repair'
+elif [ "$actionID" == 'IDG' ]; then
+	actionID='In Diagnostics'
+elif [ "$actionID" == 'RC' ]; then
+	actionID='Repair Complete'
+elif [ "$actionID" == 'NRD' ]; then
+	actionID='No Repair Done'
+elif [ "$actionID" == 'CCI' ]; then
+	actionID='Cust Came In'
+elif [ "$actionID" == '1B' ]; then
+	actionID='1 Bench'
+elif [ "$actionID" == '2B' ]; then
+	actionID='2 Bench'
+elif [ "$actionID" == '3B' ]; then
+	actionID='3 Bench'
+elif [ "$actionID" == '4B' ]; then
+	actionID='4 Bench'
+elif [ "$actionID" == '5B' ]; then
+	actionID='5 Bench'
+fi
+
 case $actionID in
        A1|A2|A3|A4|A5|A6|A7|B1|B2|C1|C2|C3|C4|C5|C6|C7|D|E1|E2|G1|G2|G3|G4|G5|"Front Counter"|"1 Bench"|"2 Bench"|"3 Bench"|"4 Bench"|"5 Bench")
 		echo "$actionID" > "$PCFOLDER/location";
