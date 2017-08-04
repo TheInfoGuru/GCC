@@ -103,6 +103,14 @@ clear
 #Get PC ID
 printf "Enter or scan in the PC ID, or type (o) for noncustomer PC: "
 read PCID
+
+if [ "${PCID:0:2}" != "ID" ]; then
+	PCIDLoc=$(mktemp)
+	echo $PCID > $PCIDLoc
+	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+	rm $PCIDLoc
+fi
+
 if [ "$PCID" == "o" ]; then
 	printf "Enter a name for this file (will be located under Other in Customer Logs): "
 	read fileName

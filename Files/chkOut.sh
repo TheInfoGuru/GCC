@@ -9,6 +9,13 @@ printf "Please enter the PC ID or scan it off the computer: "
 read PCID
 echo
 
+if [ "${PCID:0:2}" != "ID" ]; then
+	PCIDLoc=$(mktemp)
+	echo $PCID > $PCIDLoc
+	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+	rm $PCIDLoc
+fi
+
 PCFOLDER=$(find ./* -maxdepth 6 -name "$PCID")
 CUSFOLDER=$(echo "${PCFOLDER%/*}")
 
@@ -39,6 +46,9 @@ CHKINFILE="$PCFOLDER/check_in"
 STATUSFILE="$PCFOLDER/status"
 RANLOGSFILE="$PCFOLDER/ranLogs"
 CONTACTSTATUSFILE="$PCFOLDER/contactStatus"
+POWERONFILE="$PCFOLDER/powerOn"
+CHARGERFILE="$PCFOLDER/charger"
+PASSWORDFILE="$PCFOLDER/password"
 
 echo '***************************CUSTOMER INFO***************************' >> "$ARCHIVEFILE"
 cat "$CUSINFOFILE" >> "$ARCHIVEFILE"
@@ -68,6 +78,9 @@ rm -f "$LOCATIONFILE"
 rm -f "$CHKINFILE"
 rm -f "$RANLOGSFILE"
 rm -f "$CONTACTSTATUSFILE"
+rm -f "$POWERONFILE"
+rm -f "$CHARGERFILE"
+rm -f "$PASSWORDFILE"
 
 DATABACKUPFOLDER="$PCFOLDER/dataBackup/current"
 CURRENTDATE=$(date "+%m%d%y")

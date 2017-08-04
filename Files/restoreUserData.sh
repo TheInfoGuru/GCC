@@ -8,6 +8,13 @@ c_timestamp() {
 printf "Enter or scan the PC ID, or type (o) for other: "
 read PCID
 
+if [ "${PCID:0:2}" != "ID" ]; then
+	PCIDLoc=$(mktemp)
+	echo $PCID > $PCIDLoc
+	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+	rm $PCIDLoc
+fi
+
 #if [ "$PCID" == 'o' ]; then
 
 #fi

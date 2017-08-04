@@ -15,6 +15,14 @@ echo '***************************************************************'
 printf "Please type in the PCID to be deleted (WARNING: THIS WILL DELETE ALL DATA UNDER CHOSEN PCID: "
 read PCID
 echo
+
+if [ "${PCID:0:2}" != "ID" ]; then
+	PCIDLoc=$(mktemp)
+	echo $PCID > $PCIDLoc
+	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+	rm $PCIDLoc
+fi
+
 PCIDFOLDER=$(find ./* -maxdepth 4 -type d -iname "$PCID")
 	[ ! "$PCIDFOLDER" ] && echo "PCID not found. Going back." && sleep 2 && main
 	echo "You have selected $PCID located at $PCIDFOLDER as the PCID to delete."

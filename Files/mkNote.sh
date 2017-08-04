@@ -84,6 +84,14 @@ isID=$(echo $choice1 | grep 'ID')
 
 if [ "$isID" ]; then
 	eval PCID="$choice1"
+
+	if [ "${PCID:0:2}" != "ID" ]; then
+		PCIDLoc=$(mktemp)
+		echo $PCID > $PCIDLoc
+		PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+		rm $PCIDLoc
+	fi
+
 	echo
 
 	PCFOLDER=$(find ./* -maxdepth 6 -name "$PCID")

@@ -115,6 +115,13 @@ printf "Please type or scan PC ID, or type (c) for search by customer name: "
 read PCID
 echo
 
+if [ "${PCID:0:2}" != "ID" ]; then
+	PCIDLoc=$(mktemp)
+	echo $PCID > $PCIDLoc
+	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+	rm $PCIDLoc
+fi
+
 if [ "$PCID" == "c" ]; then
 	echo '***************************************************************'
 	printf "Please enter the customer name to look for: "
