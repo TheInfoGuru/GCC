@@ -39,7 +39,7 @@ if [ "$FILTER" ]; then
 	echo "Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?*Data Backup" > "$TRACKERFILEFILTER"
 	echo "--------------------------*-----*---------*-----------------------*-------------*---------------------*-----------*-------------" >> "$TRACKERFILEFILTER"
 	if [ "${FILTER,,}" == "${CODEWORD,,}" ]; then
-		grep -Eiv '(Repair Complete|No Repair Done)' "$TRACKERFILE" >> "$TRACKERFILEFILTER"
+		grep -Eiv '(Repair Complete|No Repair Done|Waiting)' "$TRACKERFILE" >> "$TRACKERFILEFILTER"
 	else
 		grep -i "$FILTER" "$TRACKERFILE" >> "$TRACKERFILEFILTER"
 	fi

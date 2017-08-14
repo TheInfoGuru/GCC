@@ -105,20 +105,21 @@ echo '***************************************************************'
 printf "Please scan or enter PCID, or type (n) for new PCID: "
 read PCID
 echo
-
-if [ "${PCID:0:2}" != "ID" ]; then
-	PCIDLoc=$(mktemp)
-	echo $PCID > $PCIDLoc
-	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
-	rm $PCIDLoc
+if [ "$PCID" != "n" ]; then
+	if [ "${PCID:0:2}" != "ID" ]; then
+		PCIDLoc=$(mktemp)
+		echo $PCID > $PCIDLoc
+		PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+		rm $PCIDLoc
+	fi
 fi
-
 ################################################################# IF NEW PC ##################################################################
 
 if [ "$PCID" == "n" ]; then
 	#Store variables
 	IDCOUNT=$(find ./* -maxdepth 6 -type f -name '.IDCOUNT')
 	PCID=$(cat "$IDCOUNT")
+	UPID="y"
 
 	#Display to user the next available PC ID
 	echo '***************************************************************'
@@ -227,31 +228,32 @@ fi
 echo '***************************************************************'
 printf "What is the issue the PC is experiencing (reason for check in): "
 read ISSUE
-echo -e "@@@@@ $(c_timestamp) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> "$PCFOLDER/notes"
-echo "$ISSUE" >> "$PCFOLDER/notes"
-echo >> "$PCFOLDER/notes"
 echo
 
 #Create PC status file indicating it has been checked in, and make first line check-in and date
-echo -e "[$(c_timestamp)] Checked in computer." >> "$PCFOLDER/log"
-
 echo '***************************************************************'
 printf "Is the computer being dropped off with a power cord (y/n): "
 read CHARGER
-echo $CHARGER > "$PCFOLDER/charger"
 echo
 
 echo '***************************************************************'
 printf "Does the PC power on and POST (y/n): "
 read POWERON
-echo $POWERON > "$PCFOLDER/powerOn"
 echo
 
 echo '***************************************************************'
 printf "What is the password to the PC (press ENTER for no password): "
 read PASSWORD
-echo $PASSWORD > "$PCFOLDER/password"
 echo
+
+#Write to files
+echo -e "[$(c_timestamp)] Checked in computer." >> "$PCFOLDER/log"
+echo -e "@@@@@ $(c_timestamp) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> "$PCFOLDER/notes"
+echo "$ISSUE" >> "$PCFOLDER/notes"
+echo >> "$PCFOLDER/notes"
+echo $CHARGER > "$PCFOLDER/charger"
+echo $POWERON > "$PCFOLDER/powerOn"
+echo $PASSWORD > "$PCFOLDER/password"
 
 #make a default location file with NA
 echo "NA" > "$PCFOLDER/location"
@@ -279,7 +281,9 @@ if [ -f "$PCFOLDER/log" ]; then
 	echo '*****************************'
 	echo '** PC has been checked in. **'
 	echo '*****************************'
-	up_id
+	if [ "$UPID" == "y" ]; then
+		up_id
+	fi
 	sleep 2
 	exit
 else

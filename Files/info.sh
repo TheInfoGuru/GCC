@@ -1,29 +1,4 @@
 #!/bin/bash
-winver() {
-for i in win7 vista win8 winblue rs1 th2 Win8.1
-	do
-		if [ -f "$winDir/Windows/System32/ntoskrnl.exe" ]; then
-			strings $winDir/Windows/System32/ntoskrnl.exe | grep $i > /dev/null && 2>/dev/null
-			if [ $? -eq 0 ]; then
-				local winVar=$i
-				if [ $winVar == "win7" ]; then
-					local winVer="Windows 7"
-				elif [ $winVar == "vista" ]; then
-					local winVer="Windows Vista"
-				elif [ $winVar == "win8" ]; then
-					local winVer="Windows 8"
-				elif [ $winVar == "winblue" ]; then
-					local winVer="Windows 8.1"
-				elif [ $winVar == "rs1" ] || [ $winVar == "th2" ] || [ $winVar == "Win8.1" ]; then
-					local winVer="Windows 10"
-				else local winVer="Windows version unknown"
-				fi
-			fi
-		else winVer="Probably not Windows"
-		fi
-	done
-eval "$1='$winVer'"
-}
 
 function c_timestamp() {
         date | awk '{print $2,$3,$4}'
@@ -104,13 +79,14 @@ clear
 printf "Enter or scan in the PC ID, or type (o) for noncustomer PC: "
 read PCID
 
-if [ "${PCID:0:2}" != "ID" ]; then
-	PCIDLoc=$(mktemp)
-	echo $PCID > $PCIDLoc
-	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
-	rm $PCIDLoc
+if [ "$PCID" != "o" ]; then
+	if [ "${PCID:0:2}" != "ID" ]; then
+		PCIDLoc=$(mktemp)
+		echo $PCID > $PCIDLoc
+		PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+		rm $PCIDLoc
+	fi
 fi
-
 if [ "$PCID" == "o" ]; then
 	printf "Enter a name for this file (will be located under Other in Customer Logs): "
 	read fileName
@@ -238,7 +214,36 @@ fi
 echo Trying to get Windows Version ...
 winVersion=''
 if [ "$winDir" != "NA" ]; then
-	winver winVersion
+	KRNLFILE=$(find -P -O3 "$winDir" -type f -ipath '*/windows/system32/ntoskrnl.exe' -not -ipath "*/windows.old/*" -print0 -quit)
+	if [ ! -z "$KRNLFILE" ]; then
+		for i in win7 vista win8 winblue rs1 th2 Win8.1; do
+			strings "$KRNLFILE" | grep $i > /dev/null && 2> /dev/null
+			if [ $? -eq 0 ]; then
+				case $i in
+					win7)
+						winVersion="Windows 7";
+						;;
+					vista)
+						winVersion="Windows Vista";
+						;;
+					win8)
+						winVersion="Windows 8";
+						;;
+					winblue)
+						winVersion="Windows 8.1";
+						;;
+					rs1|th2|Win8.1)
+						winVersion="Windows 10";
+						;;
+					*)
+						winVersion="Windows Version Unknown";
+						;;
+				esac
+			fi
+		done
+	else
+		winVersion="Couldn't find NTOSKRNL.exe"
+	fi
 else winVersion="Windows Partition not mounted"
 fi
 
