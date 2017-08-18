@@ -79,7 +79,15 @@ if [ -z "$winDir" ]; then
 					sudo umount -l $winMount
 					choose_partition
 				fi
-			else echo "yes"
+			else
+				echo "yes"
+				echo "Checking to see if mounted RW ..."
+				RWCHECK=$(mount | grep "$winMount" | grep rw)
+				if [ -z "$RWCHECK" ]; then
+					sudo umount $winMount > /dev/null 2> /dev/null
+					sudo ntfsfix $winMount > /dev/null 2> /dev/null
+					sudo mount -o remove_hiberfile,rw $winMount $HOME/winMount> /dev/null 2> /dev/null
+				fi
 			fi
 		else 
 			echo "no"
@@ -88,6 +96,14 @@ if [ -z "$winDir" ]; then
 	else
 		echo yes
 		choose_partition
+	fi
+else
+	echo "Checking to see if mounted RW ..."
+	RWCHECK=$(mount | grep "$winMount" | grep rw)
+	if [ -z "$RWCHECK" ]; then
+		sudo umount $winMount> /dev/null 2> /dev/null
+		sudo ntfsfix $winMount> /dev/null 2> /dev/null
+		sudo mount -o remove_hiberfile,rw $winMount $HOME/winMount> /dev/null 2> /dev/null
 	fi
 fi
 
