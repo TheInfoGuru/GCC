@@ -178,7 +178,7 @@ if [ "$PCID" == "n" ]; then
 
 	#Make new folder for new computer under PC ID name
 	PCFOLDER="$CUSFOLDER/$PCID"
-	mkdir "$PCFOLDER"
+	mkdir "$PCFOLDER" 2> /dev/null
 	chmod -R 777 "$PCFOLDER"
 else
 

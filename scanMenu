@@ -113,6 +113,11 @@ do
 		main_menu;
             	;;
 
+	6p) clear;
+		tmux new-window -n PrintStatusTracker ./Files/statusTrackerPrint.sh;
+		main_menu;
+		;;
+
 	7) clear;
 	        tmux new-window -n MakeNote ./Files/mkNote.sh;
 		main_menu;

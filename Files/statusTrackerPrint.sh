@@ -1,5 +1,13 @@
 #!/bin/bash
 
+LPR() {
+#[ ! command -v enscript ] && echo "Installing enscript. Please wait." && sudo apt install -qqy enscript
+ENSCRIPT="--no-header --margins=36:36:36:36 --font=Times-Roman12 --word-wrap --media=Letter"
+export ENSCRIPT
+/usr/bin/enscript -p - $1 | /usr/bin/lpr
+}
+
+
 clean_up() {
 	rm $TRACKERFILEFILTER 2> /dev/null
 	rm $TRACKERFILE 2> /dev/null
@@ -9,8 +17,6 @@ clean_up() {
 CODEWORD=working
 TRACKERFILE=$(mktemp)
 
-printf "Enter or scan filter tag (e.g. Need to Call, 1 Bench, Repair Complete, etc ...) or press enter for no filter: "
-read FILTER
 
 echo >> "$TRACKERFILE"
 echo "Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?*Data Backup" >> "$TRACKERFILE"
@@ -34,20 +40,5 @@ for i in $(find ./* -maxdepth 6 -type f -name 'log'); do
 	echo "$CUSNAME*$PCID*$LOCATION*$PCSTATUS*$CHKINDATE*$CONTACTSTATUS*$RANLOGS*$DATABACKUP" >> "$TRACKERFILE"
 done
 
-if [ "$FILTER" ]; then
-	TRACKERFILEFILTER=$(mktemp)
-	echo "Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?*Data Backup" > "$TRACKERFILEFILTER"
-	echo "--------------------------*-----*---------*-----------------------*-------------*---------------------*-----------*-------------" >> "$TRACKERFILEFILTER"
-	if [ "${FILTER,,}" == "${CODEWORD,,}" ]; then
-		grep -Eiv '(Repair Complete|No Repair Done|Waiting)' "$TRACKERFILE" >> "$TRACKERFILEFILTER"
-	else
-		grep -i "$FILTER" "$TRACKERFILE" >> "$TRACKERFILEFILTER"
-	fi
-	column -s '*' -t "$TRACKERFILEFILTER" | less
-	clean_up
-	exit
-fi
-
-column -s '*' -t "$TRACKERFILE" | less
 LPR $TRACKERFILE
 clean_up
