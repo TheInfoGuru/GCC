@@ -230,12 +230,12 @@ echo '**************************************************************************
 printf "Please enter or scan PC ID, or type (c) to search by customer name: "
 read PCID
 
-if [ "${PCID:0:2}" != "ID" ]; then
-	PCIDLoc=$(mktemp)
-	echo $PCID > $PCIDLoc
-	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
-	rm $PCIDLoc
-fi
+#if [ "${PCID:0:2}" != "ID" ]; then
+#	PCIDLoc=$(mktemp)
+#	echo $PCID > $PCIDLoc
+#	PCID=$(sed -e 's/^/ID/' $PCIDLoc)
+#	rm $PCIDLoc
+#fi
 
 echo
 

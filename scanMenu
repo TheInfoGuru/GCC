@@ -173,6 +173,11 @@ do
 		main_menu;
             	;;
 
+	104a) clear;
+		tmux new-window -n DisplayAllDrawerCount ./Files/displayDrawerCount.sh;
+		main_menu;
+            	;;
+
         *)clear;
         	main_menu;
         	;;
