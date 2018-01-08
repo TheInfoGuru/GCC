@@ -168,7 +168,7 @@ if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
 	if [ "$winMount" ]; then
 		echo "yes"
 		printf "Is a windows partition mounted ... "
-		if [ ! "$winDir" ]; then
+		if [ -z "$winDir" ]; then
 			echo "no"
 			echo "Making a mount directory ..."
 			mkdir ~/winMount 2>/dev/null

@@ -32,6 +32,7 @@ for i in $(find ./* -maxdepth 6 -type f -name 'log'); do
 		DATABACKUP="N"
 	fi
 	echo "$CUSNAME*$PCID*$LOCATION*$PCSTATUS*$CHKINDATE*$CONTACTSTATUS*$RANLOGS*$DATABACKUP" >> "$TRACKERFILE"
+
 done
 
 if [ "$FILTER" ]; then
@@ -41,7 +42,7 @@ if [ "$FILTER" ]; then
 	if [ "${FILTER,,}" == "${CODEWORD,,}" ]; then
 		grep -Eiv '(Repair Complete|No Repair Done|Waiting)' "$TRACKERFILE" >> "$TRACKERFILEFILTER"
 	else
-		grep -i "$FILTER" "$TRACKERFILE" >> "$TRACKERFILEFILTER"
+		grep -iE "$FILTER" "$TRACKERFILE" >> "$TRACKERFILEFILTER"
 	fi
 	column -s '*' -t "$TRACKERFILEFILTER" | less
 	clean_up
@@ -49,5 +50,4 @@ if [ "$FILTER" ]; then
 fi
 
 column -s '*' -t "$TRACKERFILE" | less
-LPR $TRACKERFILE
 clean_up
