@@ -82,7 +82,7 @@ elif [ "$actionID" == 'FC' ]; then
 fi
 
 case $actionID in
-       A1|A2|A3|A4|A5|A6|A7|B1|B2|C1|C2|C3|C4|C5|C6|C7|D|E1|E2|"Front Counter"|"1 Bench"|"2 Bench"|"3 Bench"|"4 Bench"|"5 Bench")
+       A1|A2|A3|A4|A5|A6|A7|B1|B2|C1|C2|C3|C4|C5|C6|C7|D|E1|E2|G1|G2|G3|G4|G5|"Front Counter"|"1 Bench"|"2 Bench"|"3 Bench"|"4 Bench"|"5 Bench")
 		echo "$actionID" > "$PCFOLDER/location";
 		echo -e "[$(c_timestamp)] Computer was moved to $actionID." >> "$PCFOLDER/log";
 		echo '**********************************';
