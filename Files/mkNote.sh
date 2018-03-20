@@ -70,7 +70,7 @@ find_PC() {
 
 make_note() {
 	echo -e "@@@@@ $(c_timestamp) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> "$PCFOLDER/notes"
-	nano "$PCFOLDER/notes"
+	nano +999 "$PCFOLDER/notes"
 	echo >> "$PCFOLDER/notes"
 }
 
@@ -80,6 +80,11 @@ echo '**************************************************************************
 printf "Enter or scan in PCID or type (c) to search for computer by customer name: "
 read choice1
 echo
+
+if [ "$choice1" != "c" ] && [ "${choice1:0:2}" != "ID" ]; then
+	choice1="ID${choice1}"
+fi
+
 isID=$(echo $choice1 | grep 'ID')
 
 if [ "$isID" ]; then

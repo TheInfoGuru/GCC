@@ -222,6 +222,7 @@ else
 
 	#If not correct, open in editor
 	[ "$updateInfo" == "y" ] && nano "$CUSFOLDER/info.cus"
+	CUSNAME=$(cat "$CUSFOLDER/info.cus" | head -n 1)
 fi
 
 #Make PC notes
