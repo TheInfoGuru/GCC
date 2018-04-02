@@ -22,13 +22,13 @@ CUSFOLDER=$(echo "${PCFOLDER%/*}")
 if [ ! "$PCFOLDER" ]; then
 	echo "ERROR: PC ID COULD NOT BE FOUND. PLEASE CHECK FOLDER AND TRY AGAIN"
 	echo "OR CHECK IN AS NEW PC."
-	sleep 3
+	sleep 1
 	exit
 fi
 
 if [ ! -f "$PCFOLDER/log" ]; then
 	echo "ERROR: PC HAS NOT BEEN CHECKED IN YET."
-	sleep 3
+	sleep 1
 	exit
 fi
 
@@ -90,6 +90,5 @@ echo
 echo '******************************'
 echo '** PC has been checked out. **'
 echo '******************************'
-sleep 2
+sleep 1
 exit
-

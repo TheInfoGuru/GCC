@@ -160,7 +160,7 @@ if [ "$PCID" == "n" ]; then
 
 		if [ "$rightInfo" == "n" ]; then
 			echo "Try making a new customer with middle initial."
-			sleep 3
+			sleep 1
 			exit
 		fi
 
@@ -194,7 +194,7 @@ else
 	if [ ! "$PCFOLDER" ]; then
 		echo "ERROR: PC ID COULD NOT BE FOUND. PLEASE CHECK FOLDER AND TRY AGAIN"
 		echo "OR CHECK IN AS NEW PC."
-		sleep 3
+		sleep 1
 		exit
 	fi
 
@@ -211,7 +211,7 @@ else
 
 	if [ "$rightInfo" == "n" ]; then
 		echo "Try making a new customer with middle initial."
-		sleep 3
+		sleep 1
 		exit
 	fi
 
@@ -284,12 +284,12 @@ if [ -f "$PCFOLDER/log" ]; then
 	if [ "$UPID" == "y" ]; then
 		up_id
 	fi
-	sleep 2
+	sleep 1
 	exit
 else
 	#Display error that check-in was unsuccessful
 	echo "ERROR: COULD NOT CHECK IN COMPUTER. PLEASE CONTACT SUPPORT."
-	sleep 3
+	sleep 1
 	exit
 fi
 

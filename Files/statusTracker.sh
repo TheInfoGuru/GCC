@@ -6,15 +6,25 @@ clean_up() {
 
 }
 
+HEADER=$(cat << EOM
+Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?*Data Backup
+--------------------------*-----*---------*-----------------------*-------------*---------------------*-----------*-------------
+EOM
+)
+
+ARG1=$1
+AUTOFILTER='w'
 CODEWORD=working
 TRACKERFILE=$(mktemp)
 
-printf "Enter or scan filter tag (e.g. Need to Call, 1 Bench, Repair Complete, etc ...) or press enter for no filter: "
-read FILTER
-
+if [ "${ARG1,,}" == "${AUTOFILTER,,}" ]; then
+	FILTER='working'
+else
+	printf "Enter or scan filter tag (e.g. Need to Call, 1 Bench, Repair Complete, etc ...) or press enter for no filter: "
+	read FILTER
+fi
 echo >> "$TRACKERFILE"
-echo "Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?*Data Backup" >> "$TRACKERFILE"
-echo "--------------------------*-----*---------*-----------------------*-------------*---------------------*-----------*-------------" >> "$TRACKERFILE"
+echo "$HEADER"  >> "$TRACKERFILE"
 for i in $(find ./* -maxdepth 6 -type f -name 'log'); do
 	PCFOLDER=$(echo "${i%/*}")
 	CUSFOLDER=$(echo "${PCFOLDER%/*}")
@@ -37,13 +47,13 @@ done
 
 if [ "$FILTER" ]; then
 	TRACKERFILEFILTER=$(mktemp)
-	echo "Customer Name*PC ID*Location*Status*Check-In Date*Contact Status*Got Logs?*Data Backup" > "$TRACKERFILEFILTER"
-	echo "--------------------------*-----*---------*-----------------------*-------------*---------------------*-----------*-------------" >> "$TRACKERFILEFILTER"
 	if [ "${FILTER,,}" == "${CODEWORD,,}" ]; then
-		grep -Eiv '(Repair Complete|No Repair Done|Waiting)' "$TRACKERFILE" >> "$TRACKERFILEFILTER"
+		grep -Eiv '(Repair Complete|No Repair Done|Layaway|Waiting \(P|Waiting \(C)' "$TRACKERFILE" >> "$TRACKERFILEFILTER"
 	else
+		echo "$HEADER" >> "$TRACKERFILEFILTER"
 		grep -iE "$FILTER" "$TRACKERFILE" >> "$TRACKERFILEFILTER"
 	fi
+
 	column -s '*' -t "$TRACKERFILEFILTER" | less
 	clean_up
 	exit

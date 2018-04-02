@@ -14,6 +14,8 @@ if [ ! "$TMUX" ]; then
 		[ ! "$TMUX" ] && tmux a -t "JonThan:menu" 2>/dev/null || tmux new-session -s "JonThan" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
 	elif [ "$1" == '--front' ]; then
 		[ ! "$TMUX" ] && tmux a -t "FrontCounter:menu" 2>/dev/null || tmux new-session -s "FrontCounter" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
+	elif [ "$1" == '--steven' ]; then
+		[ ! "$TMUX" ] && tmux a -t "FlappyGuy:menu" 2>/dev/null || tmux new-session -s "FlappyGuy" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
 	else
 		[ ! "$TMUX" ] && tmux a -t "BarcodeMenu:menu" 2>/dev/null || tmux new-session -s "BarcodeMenu" $0 \; rename-window "menu" \; set mouse on \; 2>/dev/null
 	fi
@@ -65,6 +67,8 @@ main_menu(){
 	echo -e "${MENU}**${NUMBER} 4)${MENUITEM} Check Computer Report ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 5)${MENUITEM} Change Customer Info and Notes ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 6)${MENUITEM} Check Status Tracker ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 6w)${MENUITEM} Check current PCs on Status Tracker ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 6p)${MENUITEM} Print Status Tracker ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 7)${MENUITEM} Make a Note On a Checked-In PC ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 8)${MENUITEM} Search For an Archived Check-In ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 9)${MENUITEM} Manually change IDCOUNT number ${NORMAL}"
@@ -76,6 +80,7 @@ main_menu(){
 	echo -e "${MENU}**${NUMBER} 102)${MENUITEM} Add Cash Out ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 103)${MENUITEM} Add Cash In ${NORMAL}"
 	echo -e "${MENU}**${NUMBER} 104)${MENUITEM} Search Drawer Totals ${NORMAL}"
+	echo -e "${MENU}**${NUMBER} 104a)${MENUITEM} Display all Drawer History ${NORMAL}"
 	echo -e "${MENU}***********************************************************************${NORMAL}"
 	echo -e "${ENTER_LINE}Please enter a menu option. ${NORMAL}"
 	read -p ': ' optMain
@@ -110,6 +115,11 @@ do
 
 	6) clear;
 	        tmux new-window -n StatusTracker ./Files/statusTracker.sh;
+		main_menu;
+            	;;
+
+	6w) clear;
+	        tmux new-window -n StatusTracker ./Files/statusTracker.sh w;
 		main_menu;
             	;;
 
