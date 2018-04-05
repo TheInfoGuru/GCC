@@ -1,0 +1,133 @@
+#!/bin/bash
+
+###########################FUNCTION START###########################
+#echo out breakline for aethetics
+break_line() {
+  echo -e '***************************************************************'
+}
+
+###########################FUNCTION START###########################
+#Get formatted datetime
+c_timestamp() {
+  date | awk '{print $2,$3,$4}' #return formatted date to parent
+}
+
+###########################FUNCTION START###########################
+#Get formatted date
+today_date() {
+  date | awk '{print $2,$3,$6}' #return formatted date to parent
+}
+
+###########################FUNCTION START###########################
+#Get hdd blkid choice from user, and return blkid
+choose_blkid() {
+  #Set blkidList to blank
+  blkidList=()
+
+  #Check to see if need selection list for hdds or for partitions, and set appropriate parameters
+  if [ "${1}" == 'p' ]; then
+    idType="partition"
+    grepWord="part"
+  elif [ "${1}" == 'h' ]; then
+    idType="hdd"
+    grepWord="disk"
+  else
+    echo 'Usage: choose_blkid p (for partition) or choose_blkid h (for hdd)' #Display usage if used without "p" or "h" as first arg
+    return 1
+  fi
+
+  PS3=$'\n'"Please select a ${idType}: " #Change the prompt for the select loop later
+
+  while read -r blkid; do
+    blkidList+=("${blkid}") #Adding each blkid (ie sda sdb2 sdc3 ...) to an array called hddList or partionList
+  done <<< "$(lsblk | grep ${grepWord} | awk '{print $1,$4,$7}')" #This runs this command in a subshell each time and returns a single string followed by a newline to stdout, in this case to our read command at the beginning of the while loop
+
+  #Save old column number, and set columns to 1 to give nice list
+  OCOLUMNS="$COLUMNS"
+  COLUMNS=1
+
+  select opt in "${blkidList[@]}"; do #Start of select statement
+    myChoice="$(echo ${opt} | awk '{print $1}')" #get the blkid of hdd (ie if choice was "sda 114G" get just "sda" and store it in myChoice
+    break #break out of the select after making choice
+  done
+
+  #Reset columns var to normal, and clear blkidList array
+  COLUMNS="$OCOLUMNS"
+  blkidList=()
+
+  if [ "${idType}" == 'partition' ]; then
+    echo "${myChoice:2}" #return blkid leaving out wierd branch arrow symblol
+  else
+    echo "${myChoice}" #return blkid to parent process
+  fi
+}
+
+###########################FUNCTION START###########################
+#check for root priveledges
+root_check() {
+  if [ "$EUID" -eq 0 ]; then
+    echo "y" #return "y" to parent process
+  else
+    echo "n" #return "n" to parent process
+  fi
+}
+
+###########################FUNCTION START###########################
+#Quick internet check
+internet_check() {
+  if $(ping -c 1 google.com >> /dev/null 2>&1); then
+    echo "y" #return "y" to parent process
+  else
+    echo "n" #return "n" to parent process
+  fi
+}
+
+###########################FUNCTION START###########################
+#Add ID to beginning to PCID if not present
+add_id() {
+  PCID="${1}" #Grap PCID from arg1
+  [ "${PCID}" != 'o' -a "${PCID:0:2}" != 'ID' -a "${PCID}" != 'n' ] && PCID=$(echo ${PCID} | sed -e 's/^/ID/') #If PCID isn't an "o" or have ID already in front of the number, and the letters "ID"
+  echo ${PCID} #return formated PCID out to parent
+}
+
+###########################FUNCTION START###########################
+#Mount Windows HDD
+mount_windows() {
+  defaultLocation="$HOME/winMount" #Set default mount location
+  partitionMatch="$(sudo fdisk -l | grep -iE '(HPFS/NTFS/exFAT|Microsoft basic data)')" #Grab possible windows partitions
+  windowsPartition="$(grep -v '*' <<< ${partitionMatch} | awk '{print $1}')" #check most likely candidate for windows partition
+  findMounted="$(mount | grep ${windowsPartition})" #find any already mounted windows partitions
+  partitionCount="$(echo ${windowsPartition} | wc -w)" #count how many cadidates we found for windows partitions
+  mode="${1}"
+  [ "${mode}" == 'rw' ] && mode="${mode},remove_hiberfile"
+
+  #Exit function and return 1 if no possible windows partitions are found
+  [ -z "${partitionMatch}" ] && return 1
+
+  #Check if partition already mounted first
+  if [ -d "${defaultLocation}/Users" -o -d "${defaultLocation}/Documents and Settings" ]; then # Check to see if windows part already mounted in default location
+    echo "${defaultLocation}" #return default location to parent
+    return 0 #exit function successfully since win dir already mounted
+  elif [ "${findMounted}" ]; then
+    findMounted="$(echo ${findMounted} | awk '{print $3}')" #if partition alreaded mounted, get the path its mounted to and set to variable
+    echo "${findMounted}" #return location of mounted Windows partition to parent 
+    return 0 #exit function
+  fi
+
+  #get user input if more than one likely candidate partition
+  if [ "${partitionCount}" -ne 1 ]; then
+    windowsPartition="$(choose_blkid p)"
+  fi
+
+  #mount the partition to the default location
+  mkdir -p "${defaultLocation}"
+  [ "${mode}" == 'rw' ] && sudo ntfsfix /dev/$windowsPartition > /dev/null 2>&1 #if want to mount rw, use ntfsfix first
+  sudo mount -o ${mode} /dev/${windowsPartition} "${defaultLocation}" 2> /dev/null
+  if [ -d "${defaultLocation}/Users" -o -d "${defaultLocation}/Documents and Settings" ]; then #if either users or documents and settings (for xp) folder found then mounted right
+    echo "${defaultLocation}" #return the default path to parent
+  else
+    return 1 #return error code 1 if could mount properly
+  fi
+}
+
+[ "${1}" ] && "${1}"
