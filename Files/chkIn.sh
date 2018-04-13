@@ -20,15 +20,6 @@ source ./Files/commonFunctions.source
 CUSTOMERLOGS="$(find . -maxdepth 3 -type d -name 'CustomerLogs')"
 IDCOUNTFILE="$(find . -maxdepth 3 -type f -name '.IDCOUNT')"
 
-get_pcid() {
-  #User input to see if new or existing
-  break_line > /dev/stderr
-  read -p "Please scan or enter PCID, or type (n) for new PCID: " pcidChoice
-  echo > /dev/stderr
-  pcidChoice="$(add_id ${pcidChoice})"
-  echo "${pcidChoice}"
-}
-
 existing_pcid() {
   #Using PC ID set the PC folder location and the Customer Folder location in variables
   pcFolderLocation=$(find . -maxdepth 4 -name "$pcid")
@@ -71,6 +62,7 @@ new_pcid() {
   customerFolder="${CUSTOMERLOGS}/$(echo ${customerName} | tr -d ' ')"
   #Check if customer doesn't have a folder
   if [ ! -d "${customerFolder}" ]; then
+     trap remove_folders INT
      phoneNumber="$(make_customer)"
      echo
   else #If they do have a folder already
@@ -286,7 +278,9 @@ main() {
   rightInfo=n
 
   #Get PCID from user
-  pcid="$(get_pcid)"
+  pcid=$(get_pcid ", or type (n) for new PCID")
+
+  trap remove_folders INT
 
   if [ "$pcid" == "n" ]; then
     new_pcid
@@ -294,6 +288,15 @@ main() {
     existing_pcid
   fi
   return 0
+}
+
+remove_folders() {
+  if [ "${customerFolder}" ]; then
+    if [ ! $(find ${customerFolder}/* -type d) ]; then
+      rm -rf "${customerFolder}"
+    fi
+  fi
+  exit 1
 }
 
 main

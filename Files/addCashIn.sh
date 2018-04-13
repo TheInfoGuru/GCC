@@ -1,16 +1,24 @@
 #!/bin/bash
-cashInLocation="$HOME/.currentCashIn"
+CASHINLOCATION="$HOME/.currentCashIn"
 
+#get input from the user
 get_input() {
-answer=y
-read -p 'Please enter amount of cash in (Do NOT include change): $' cashIn
-echo
-printf "You have entered \$$cashIn. Is this correct? (y/n): "
-read answer
+  #initialize answer variable with 'y'
+  answer='y'
 
-if [ $answer == n ] 2> /dev/null ; then
-	get_input
-fi
+  read -p 'Please enter amount of cash in: $' cashIn
+  echo
+  printf "You have entered \$${cashIn}. Is this correct? (y/n): "
+  read answer
+
+  if [ "${answer}" == 'n' ] 2> /dev/null ; then
+    get_input
+  fi
 }
-get_input
-echo $cashIn >> "$cashInLocation"
+
+main() {
+  get_input
+  echo ${cashIn} >> "$CASHINLOCATION"
+}
+
+main

@@ -1,135 +1,160 @@
 #!/bin/bash
+
+#Source sourcefile
+source ./Files/commonFunctions.source
+
+#clear the screen
 clear
 
-CURRENTLOCATION="$HOME/.current_drawer"
-STORELOCATION="$PWD/DrawerCounts"
+#Set location variables
+CURRENTLOCATION="${HOME}/.current_drawer"
+STORELOCATION="${PWD}/DrawerCounts"
+CASHINFILE="${HOME}/.currentCashIn"
+CASHOUTFILE="${HOME}/.currentCashOut"
 
+#Beginning of the day count
 start_count() {
-echo '***************START OF DAY**************************'
-read -p 'Please enter number of 20s in drawer: ' BEGTWENTY
-read -p 'Please enter number of 10s in drawer: ' BEGTEN
-read -p 'Please enter number of 5s in drawer: ' BEGFIVE
-read -p 'Please enter number of 1s in drawer: ' BEGONE
-echo
+  #Get amounts from user
+  echo '***************START OF DAY**************************'
+  read -p 'Please enter number of 20s in drawer: ' beginningTwenties
+  read -p 'Please enter number of 10s in drawer: ' beginningTens
+  read -p 'Please enter number of 5s in drawer: ' beginningFives
+  read -p 'Please enter number of 1s in drawer: ' beginningOnes
+  echo
 
-TWENTYTOTAL=$(python -c "print($BEGTWENTY*20)")
-TENTOTAL=$(python -c "print($BEGTEN*10)")
-FIVETOTAL=$(python -c "print($BEGFIVE*5)")
-ONETOTAL=$(python -c "print($BEGONE*1)")
-BEGBAL=$(python -c "print($TWENTYTOTAL+$TENTOTAL+$FIVETOTAL+$ONETOTAL)")
+  #Amount calculations
+  twentyAmount=$(bc < <(echo "${beginningTwenties} * 20"))
+  tenAmount=$(bc < <(echo "${beginningTens} * 10"))
+  fiveAmount=$(bc < <(echo "${beginningFives} * 5"))
+  oneAmount="${beginningOnes}"
+  beginningBalance=$(bc < <(echo "${twentyAmount} + ${tenAmount} + ${fiveAmount} + ${oneAmount}"))
 
-echo "Your beginning drawer balance is: $BEGBAL"
-echo '*******************************************************'
-echo 'Please press enter to exit when you are done.'
-read nul
+  #Output to user total amount of beginning drawer
+  echo "Your beginning drawer balance is: ${beginningBalance}"
+  break_line
+  echo 'Please press enter to exit when you are done.'
+  read waitForUserInput
 
-DATE=$(date | awk '{print $2, $3, $6}')
+  start_drawer_file
 
-echo "****************$DATE****************" >> $CURRENTLOCATION
-echo '======= BEGINNING DRAWER =======' >> $CURRENTLOCATION
-echo "Number of Twenties . . . . $BEGTWENTY" >> $CURRENTLOCATION
-echo "Number of Tens . . . . . . $BEGTEN" >> $CURRENTLOCATION
-echo "Number of Fives . . . . . .$BEGFIVE" >> $CURRENTLOCATION
-echo "Number of Ones . . . . . . $BEGONE" >> $CURRENTLOCATION
-echo >> $CURRENTLOCATION
-echo "Beginning Drawer Balance" >> $CURRENTLOCATION
-echo "$BEGBAL" >> $CURRENTLOCATION
-echo '---    ---    ---    ---    ---    ---' >> $CURRENTLOCATION
+  return 0
+}
+
+#Print to current drawer count file
+start_drawer_file() {
+  echo "****************$(today_date)****************" >> ${CURRENTLOCATION}
+  echo '======= BEGINNING DRAWER =======' >> ${CURRENTLOCATION}
+  echo "Number of Twenties . . . . ${beginningTwenties}" >> ${CURRENTLOCATION}
+  echo "Number of Tens . . . . . . ${beginningTens}" >> ${CURRENTLOCATION}
+  echo "Number of Fives . . . . . .${beginningFives}" >> ${CURRENTLOCATION}
+  echo "Number of Ones . . . . . . ${beginningOnes}" >> ${CURRENTLOCATION}
+  echo >> ${CURRENTLOCATION}
+  echo "Beginning Drawer Balance: \$$beginningBalance" >> ${CURRENTLOCATION}
+  echo '---    ---    ---    ---    ---    ---' >> ${CURRENTLOCATION}
+
+  return 0
 }
 
 end_count() {
-echo '***************END OF DAY*******************'
-read -p 'Please enter number of 20s in drawer: ' ENDTWENTY
-read -p 'Please enter number of 10s in drawer: ' ENDTEN
-read -p 'Please enter number of 5s in drawer: ' ENDFIVE
-read -p 'Please enter number of 1s in drawer: ' ENDONE
-read -p 'Enter CASH QuickBooks total: $' QBTOTAL
-read -p 'Enter CC BATCH total: $' CCTOTAL
+  #get ending drawer amounts from user
+  echo '***************END OF DAY*******************'
+  read -p 'Please enter number of 20s in drawer: ' endTwenties
+  read -p 'Please enter number of 10s in drawer: ' endTens
+  read -p 'Please enter number of 5s in drawer: ' endFives
+  read -p 'Please enter number of 1s in drawer: ' endOnes
+  read -p 'Enter CASH QuickBooks total: $' qbTotal
+  read -p 'Enter CC BATCH total: $' ccTotal
 
-CASHIN=0
-CASHOUT=0
-CASHINFILE="$HOME/.currentCashIn"
-CASHOUTFILE="$HOME/.currentCashOut"
-CASHINAMOUNTS=$(cat $CASHINFILE 2> /dev/null)
-CASHOUTAMOUNTS=$(cat $CASHOUTFILE 2> /dev/null)
+  #Initialize Values
+  cashIn=0
+  cashOut=0
+  cashInAmounts=$(cat ${CASHINFILE} 2> /dev/null)
+  cashOutAmounts=$(cat ${CASHOUTFILE} 2> /dev/null)
 
-for i in $CASHINAMOUNTS; do
-	CASHIN=$(expr $CASHIN + $i) 2> /dev/null
-done
+  #Add up cash in and out amounts
+  for i in ${cashInAmounts}; do
+    cashIn=$(bc < <(echo "${cashIn} + ${i}"))
+  done
 
-for j in $CASHOUTAMOUNTS; do
-	CASHOUT=$(expr $CASHOUT + $j) 2> /dev/null
-done
+  for j in ${cashOutAmounts}; do
+    cashOut=$(bc < <(echo "${cashOut} + ${j}"))
+  done
 
-BEGBAL=$(grep -A 1 'Beginning Drawer Balance' $CURRENTLOCATION | grep -v 'Beginning Drawer Balance')
+  #Get and calculate ending drawer amounts
+  beginningBalance=$(grep 'Beginning Drawer' ${CURRENTLOCATION} | awk '{print $4}' | tr -d '$')
+  twentyAmount=$(bc < <(echo "${endTwenties} * 20"))
+  tenAmount=$(bc< <(echo "${endTens} * 10"))
+  fiveAmount=$(bc < <(echo "${endFives} * 5"))
+  oneAmount="${endOnes}"
+  endingBalance=$(bc < <(echo "${twentyAmount} + ${tenAmount} + ${fiveAmount} + ${oneAmount}"))
+  cashDeposit=$(bc < <(echo "${qbTotal} + ${beginningBalance} - ${endingBalance} - ${cashOut} + ${cashIn}"))
 
-TWENTYTOTAL=$(python -c "print($ENDTWENTY*20)")
-TENTOTAL=$(python -c "print($ENDTEN*10)")
-FIVETOTAL=$(python -c "print($ENDFIVE*5)")
-ONETOTAL=$(python -c "print($ENDONE*1)")
-ENDBAL=$(python -c "print($TWENTYTOTAL+$TENTOTAL+$FIVETOTAL+$ONETOTAL)")
-CASHDEPOSIT=$(python -c "print($QBTOTAL+$BEGBAL-$ENDBAL-$CASHOUT+$CASHIN)")
-
-echo '*******************************************************'
-tput setaf 3
-echo
-echo "Your beginning drawer balance was: \$$BEGBAL"
-echo "Your ending drawer balance is: \$$ENDBAL"
-echo "Your total cash in today was: \$$CASHIN"
-echo "Your total cash out today was: \$$CASHOUT"
-echo
-echo "Your Cash Deposit should be \$$CASHDEPOSIT."
-echo
-echo "Your totals for the day are as follows:"
-echo
-echo "CASH ................... \$$QBTOTAL"
-echo "CC ..................... \$$CCTOTAL"
-echo
-tput sgr0
-echo '*******************************************************'
-echo "Please press enter to exit when you are done."
-read nul
-
-echo >> $CURRENTLOCATION
-echo '======== ENDING DRAWER ========' >> $CURRENTLOCATION
-echo "Number of Twenties . . . . $ENDTWENTY" >> $CURRENTLOCATION
-echo "Number of Tens . . . . . . $ENDTEN" >> $CURRENTLOCATION
-echo "Number of Fives . . . . . .$ENDFIVE" >> $CURRENTLOCATION
-echo "Number of Ones . . . . . . $ENDONE" >> $CURRENTLOCATION
-echo >> $CURRENTLOCATION
-echo "Ending Drawer Balance" >> $CURRENTLOCATION
-echo "\$$ENDBAL" >> $CURRENTLOCATION
-echo >> $CURRENTLOCATION
-echo "Ending QB Cash Total" >> $CURRENTLOCATION
-echo "\$$QBTOTAL" >> $CURRENTLOCATION
-echo >> $CURRENTLOCATION
-echo "Ending CC Batch Total" >> $CURRENTLOCATION
-echo "\$$CCTOTAL" >> $CURRENTLOCATION
-echo >> $CURRENTLOCATION
-echo "Cash Out For the Day" >> $CURRENTLOCATION
-echo "\$$CASHOUT" >> $CURRENTLOCATION
-echo >> $CURRENTLOCATION
-echo "Cash In For the Day" >> $CURRENTLOCATION
-echo "\$$CASHIN" >> $CURRENTLOCATION
-echo >> $CURRENTLOCATION
-echo "Actual Cash Deposit" >> $CURRENTLOCATION
-echo "\$$CASHDEPOSIT" >> $CURRENTLOCATION
-echo '###########################################################' >> $CURRENTLOCATION
-echo >> $CURRENTLOCATION
-cat $CURRENTLOCATION >> $STORELOCATION
-if [ $? -ne 0 ]; then
-	echo "there was an error cating current to store location"
-	read nul
-	exit 1
-fi
-rm $CURRENTLOCATION
-rm $CASHINFILE 2> /dev/null
-rm $CASHOUTFILE 2> /dev/null
+  display_user_summary
+  end_drawer_file
+  cleanup_files
 }
 
+display_user_summary() {
+  #Display to user daily summary
+  break_line
+  tput setaf 3
+  echo
+  echo "Your beginning drawer balance was: \$${beginningBalance}"
+  echo "Your ending drawer balance is: \$${endingBalance}"
+  echo "Your total cash in today was: \$${cashIn}"
+  echo "Your total cash out today was: \$${cashOut}"
+  echo
+  echo "Your Cash Deposit should be \$${cashDeposit}."
+  echo
+  echo "Your totals for the day are as follows:"
+  echo
+  echo "CASH ................... \$${qbTotal}"
+  echo "CC ..................... \$${ccTotal}"
+  echo
+  tput sgr0
+  break_line
+  echo "Please press enter to exit when you are done."
+  read nul
+}
 
+end_drawer_file() {
+  #print daily summary to storage file
+  echo >> ${CURRENTLOCATION}
+  echo '======== ENDING DRAWER ========' >> ${CURRENTLOCATION}
+  echo "Number of Twenties . . . . ${endTwenties}" >> ${CURRENTLOCATION}
+  echo "Number of Tens . . . . . . ${endTens}" >> ${CURRENTLOCATION}
+  echo "Number of Fives . . . . . .${endFives}" >> ${CURRENTLOCATION}
+  echo "Number of Ones . . . . . . ${endOnes}" >> ${CURRENTLOCATION}
+  echo >> ${CURRENTLOCATION}
+  echo "Ending Drawer Balance" >> ${CURRENTLOCATION}
+  echo "\$${endingBalance}" >> ${CURRENTLOCATION}
+  echo >> ${CURRENTLOCATION}
+  echo "Ending QB Cash Total" >> ${CURRENTLOCATION}
+  echo "\$${qbTotal}" >> ${CURRENTLOCATION}
+  echo >> ${CURRENTLOCATION}
+  echo "Ending CC Batch Total" >> ${CURRENTLOCATION}
+  echo "\$${ccTotal}" >> ${CURRENTLOCATION}
+  echo >> ${CURRENTLOCATION}
+  echo "Cash Out For the Day" >> ${CURRENTLOCATION}
+  echo "\$${cashOut}" >> ${CURRENTLOCATION}
+  echo >> ${CURRENTLOCATION}
+  echo "Cash In For the Day" >> ${CURRENTLOCATION}
+  echo "\$${cashIn}" >> ${CURRENTLOCATION}
+  echo >> ${CURRENTLOCATION}
+  echo "Actual Cash Deposit" >> ${CURRENTLOCATION}
+  echo "\$${cashDeposit}" >> ${CURRENTLOCATION}
+  echo '###########################################################' >> ${CURRENTLOCATION}
+  echo >> ${CURRENTLOCATION}
+  cat ${CURRENTLOCATION} >> ${STORELOCATION}
+}
 
-if [ -f "$CURRENTLOCATION" ]; then
+cleanup_files() {
+  [ -f "${CURRENTLOCATION}" ] && rm ${CURRENTLOCATION}
+  [ -f "${CASHINFILE}" ] && rm ${CASHINFILE}
+  [ -f "${CASHOUTFILE}" ] && rm ${CASHOUTFILE}
+
+}
+if [ -f "${CURRENTLOCATION}" ]; then
 	end_count
 else
 	start_count

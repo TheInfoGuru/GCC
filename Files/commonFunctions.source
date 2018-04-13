@@ -1,6 +1,16 @@
 #!/bin/bash
 
 ###########################FUNCTION START###########################
+get_pcid() {
+  #User input to see if new or existing
+  break_line > /dev/stderr
+  read -p "Please scan or enter PCID${1}: " pcidChoice
+  echo > /dev/stderr
+  pcidChoice="$(add_id ${pcidChoice})"
+  echo "${pcidChoice}"
+}
+
+###########################FUNCTION START###########################
 #echo out breakline for aethetics
 break_line() {
   echo -e '***************************************************************'
@@ -40,12 +50,13 @@ choose_blkid() {
 
   while read -r blkid; do
     blkidList+=("${blkid}") #Adding each blkid (ie sda sdb2 sdc3 ...) to an array called hddList or partionList
-  done <<< "$(lsblk | grep ${grepWord} | awk '{print $1,$4,$7}')" #This runs this command in a subshell each time and returns a single string followed by a newline to stdout, in this case to our read command at the beginning of the while loop
+  done <<< "$(lsblk -o name,size,type,fstype,mountpoint | grep ${grepWord} | awk '{print $1,$2,$4,$5}')" #This runs this command in a subshell each time and returns a single string followed by a newline to stdout, in this case to our read command at the beginning of the while loop
 
   #Save old column number, and set columns to 1 to give nice list
   OCOLUMNS="$COLUMNS"
   COLUMNS=1
 
+  #show list
   select opt in "${blkidList[@]}"; do #Start of select statement
     myChoice="$(echo ${opt} | awk '{print $1}')" #get the blkid of hdd (ie if choice was "sda 114G" get just "sda" and store it in myChoice
     break #break out of the select after making choice
@@ -91,43 +102,81 @@ add_id() {
 }
 
 ###########################FUNCTION START###########################
+#return windows version
+get_windows_version() {
+  #set reg tree location and subkey
+  regPath="Microsoft\Windows NT\CurrentVersion"
+  subKey="ProductName"
+
+  #make sure hivexget is installed
+  which hivexget > /dev/null || echo "Installing registry program. Please wait..." && sudo apt install -qq libhivex-bin > /dev/null 2>/dev/null #if not install it
+
+  #assign arg 1 as the windows directory
+  windowsDirectory="${1}"
+
+  #if not passed a valid windows directory, then run mount windows to return one
+  [ ! $(find "${windowsDirectory}" -maxdepth 1 -type d -iname 'windows' 2> /dev/null) ] && windowsDirectory="$(mount_windows ro)"
+
+  #get the location of the config folder and the SOFTWARE hive location
+  hiveFolder=$(find "${windowsDirectory}" -maxdepth 3 -ipath "*/windows/system32/config")
+  hiveFile=$(find "${hiveFolder}" -maxdepth 1 -type f -iname 'software')
+
+  #run hivexget to return the product name
+  windowsVersion=$(hivexget "${hiveFile}" "${regPath}" "${subKey}")
+
+  #return the Product name subkey
+  echo "${windowsVersion}"
+
+  #exit cleanly
+  return 0
+}
+
+###########################FUNCTION START###########################
 #Mount Windows HDD
 mount_windows() {
   defaultLocation="$HOME/winMount" #Set default mount location
-  partitionMatch="$(sudo fdisk -l | grep -iE '(HPFS/NTFS/exFAT|Microsoft basic data)')" #Grab possible windows partitions
-  windowsPartition="$(grep -v '*' <<< ${partitionMatch} | awk '{print $1}')" #check most likely candidate for windows partition
-  findMounted="$(mount | grep ${windowsPartition})" #find any already mounted windows partitions
+  windowsPartition="$(lsblk -o name,parttype,partflags | grep -E '(0x7|ebd0a0a2-b9e5-4433-87c0)' | grep -v '0x80' | awk '{print $1}')"
   partitionCount="$(echo ${windowsPartition} | wc -w)" #count how many cadidates we found for windows partitions
+  [ "${partitionCount}" -eq 1 ] && windowsPartition="$(echo ${windowsPartition} | grep -v '0x80' | awk '{print $1}')"
+  findMounted="$(mount | grep 'fuseblk')" #find any already mounted windows partitions
+  mountCount="$(echo ${findMounted} | wc -w)"
   mode="${1}"
   [ "${mode}" == 'rw' ] && mode="${mode},remove_hiberfile"
+  [ -z "${mode}" ] && mode='ro'
 
   #Exit function and return 1 if no possible windows partitions are found
-  [ -z "${partitionMatch}" ] && return 1
+  [ -z "${windowsPartition}" ] && return 1
 
   #Check if partition already mounted first
-  if [ -d "${defaultLocation}/Users" -o -d "${defaultLocation}/Documents and Settings" ]; then # Check to see if windows part already mounted in default location
-    echo "${defaultLocation}" #return default location to parent
-    return 0 #exit function successfully since win dir already mounted
-  elif [ "${findMounted}" ]; then
-    findMounted="$(echo ${findMounted} | awk '{print $3}')" #if partition alreaded mounted, get the path its mounted to and set to variable
-    echo "${findMounted}" #return location of mounted Windows partition to parent 
-    return 0 #exit function
-  fi
-
-  #get user input if more than one likely candidate partition
-  if [ "${partitionCount}" -ne 1 ]; then
+  if [ "${mountCount}" -eq 6 ]; then
+    if [ "${mode}" == 'rw,remove_hiberfile' -a ! "$(echo ${findMounted} | grep 'rw')" ]; then
+      windowsPartition="$(echo ${findMounted} | awk '{print $1}' | sed 's:.*/::')"
+    else
+      mountedLocation="$(echo ${findMounted} | awk '{print $3}')"
+      if [ -d "${mountedLocation}/Users" -o -d "${mountedLocation}/Documents and Settings" ]; then #if either users or documents and settings (for xp) folder found then mounted right
+        echo "${mountedLocation}" #return the default path to parent
+        return 0
+      else
+        windowsPartition="$(choose_blkid p)"
+      fi #if partition alreaded mounted, get the path its mounted to and set to variable
+    fi
+  elif [ "${partitionCount}" -ne 1 ]; then
     windowsPartition="$(choose_blkid p)"
+  else
+    windowsPartition="${windowsPartition:2}"
   fi
 
   #mount the partition to the default location
   mkdir -p "${defaultLocation}"
-  [ "${mode}" == 'rw' ] && sudo ntfsfix /dev/$windowsPartition > /dev/null 2>&1 #if want to mount rw, use ntfsfix first
+  sudo umount -l /dev/${windowsPartition} > /dev/null 2>&1
+  [ "${mode}" == 'rw,remove_hiberfile' ] && sudo ntfsfix /dev/${windowsPartition} > /dev/null 2>&1 #if want to mount rw, use ntfsfix first
   sudo mount -o ${mode} /dev/${windowsPartition} "${defaultLocation}" 2> /dev/null
-  if [ -d "${defaultLocation}/Users" -o -d "${defaultLocation}/Documents and Settings" ]; then #if either users or documents and settings (for xp) folder found then mounted right
+  if [ "$(find ${defaultLocation} -maxdepth 1 -type d -iname 'Windows')" ]; then #if either users or documents and settings (for xp) folder found then mounted right
     echo "${defaultLocation}" #return the default path to parent
   else
     return 1 #return error code 1 if could mount properly
   fi
 }
 
+#Run function if sourced with argument
 [ "${1}" ] && "${1}"

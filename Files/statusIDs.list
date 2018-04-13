@@ -1,16 +1,16 @@
 CCI`Cust Came In`Y
 WC`Waiting (Cust)`Y
 WP`Waiting (Part)`Y
-WT`Waiting (Tech)`Y
+WT`Waiting (Tech)
 NTC`Need to Call`Y
 LVM`Left Voicemail`Y
 C`Contacted`Y
 CNR`Could Not Reach`Y
 IR`In Repair`Y
-IDG`In Diagnostics`Y
+IDG`In Diagnostics
 RC`Repair Complete`Y
 NRD`No Repair Done`Y
-LW`Layaway`Y
+LW`Layaway
 1B`1 Bench
 2B`2 Bench
 3B`3 Bench
@@ -18,6 +18,8 @@ LW`Layaway`Y
 5B`5 Bench
 FC`Front Counter
 D`D1
+E1`E1
+E2`E2
 A1`A1
 A2`A2
 A3`A3
@@ -34,3 +36,4 @@ C4`C4
 C5`C5
 C6`C6
 C7`C7
+o`O

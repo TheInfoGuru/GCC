@@ -92,7 +92,7 @@ make_change() {
       make_change ;
       ;;
 
-    'o'|'O')
+    'O')
       break_line
       read -p 'Please enter other location: ' otherLocation;
       echo "${otherLocation}" > "${pcFolder}/location";

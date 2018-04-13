@@ -62,7 +62,7 @@ find_PC() {
 				*)
 					echo "ERROR: YOU HAVE MADE AN INCORRECT CHOICE.";
 					echo "PLEASE CHOOSE ONE OF THE OPTIONS LISTED.";
-					sleep 3;
+					sleep 1;
 					;;
 			esac
 		done
@@ -196,7 +196,7 @@ if [ "$PCID" == "c" ]; then
 				*)
 					echo "ERROR: YOU HAVE MADE AN INCORRECT CHOICE.";
 					echo "PLEASE CHOOSE ONE OF THE OPTIONS LISTED.";
-					sleep 3;
+					sleep 1;
 					;;
 		        esac
 		done
@@ -213,13 +213,13 @@ IDNUMBER=$PCID
 
 if [ ! "$PCFOLDER" ]; then
         echo "ERROR: PC ID COULD NOT BE FOUND. PLEASE CHECK FOLDER AND TRY AGAIN."
-        sleep 3
+        sleep 1
         exit
 fi
 
 if [ ! -f "$PCFOLDER/log" ]; then
         echo "ERROR: PC HAS NOT BEEN CHECKED IN YET."
-        sleep 3
+        sleep 1
         exit
 fi
 
