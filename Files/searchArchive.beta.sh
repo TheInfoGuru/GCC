@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#source sourcefile
+source ./Files/commonFunctions.source
+
 idDisplayArray=()
 idFolderArray=()
 CUSFOLDER=
@@ -14,7 +17,7 @@ c_timestamp() {
 
 find_archive() {
 	old_IFS=$IFS
-	for i in $(find "$PCFOLDER" -maxdepth 4 -type f | grep -v -E '(location|notes|log|status|check_in|dataBackup|info|chargerPresent|contactStatus|password|powerOn|ranLogs)'); do
+	for i in $(find "$PCFOLDER" -maxdepth 6 -type f | grep -v -E '(location|notes|log|status|check_in|dataBackup|info)'); do
 	                IFS=
 	                archiveArray+=($i)
 	        done
@@ -225,8 +228,8 @@ cat $ARCHIVEFILE | less
 }
 
 main() {
-clear
-echo '****************************************************************************************************'
+  clear
+  break_line
 printf "Please enter or scan PC ID, or type (c) to search by customer name: "
 read PCID
 

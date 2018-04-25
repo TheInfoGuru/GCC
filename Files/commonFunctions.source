@@ -50,7 +50,7 @@ choose_blkid() {
 
   while read -r blkid; do
     blkidList+=("${blkid}") #Adding each blkid (ie sda sdb2 sdc3 ...) to an array called hddList or partionList
-  done <<< "$(lsblk -o name,size,type,fstype,mountpoint | grep ${grepWord} | awk '{print $1,$2,$4,$5}')" #This runs this command in a subshell each time and returns a single string followed by a newline to stdout, in this case to our read command at the beginning of the while loop
+  done <<< "$(lsblk -lo name,size,type,fstype,mountpoint | grep ${grepWord} | awk '{print $1,$2,$4,$5}')" #This runs this command in a subshell each time and returns a single string followed by a newline to stdout, in this case to our read command at the beginning of the while loop
 
   #Save old column number, and set columns to 1 to give nice list
   OCOLUMNS="$COLUMNS"
@@ -66,11 +66,7 @@ choose_blkid() {
   COLUMNS="$OCOLUMNS"
   blkidList=()
 
-  if [ "${idType}" == 'partition' ]; then
-    echo "${myChoice:2}" #return blkid leaving out wierd branch arrow symblol
-  else
-    echo "${myChoice}" #return blkid to parent process
-  fi
+  echo "${myChoice}" #return blkid to parent process
 }
 
 ###########################FUNCTION START###########################
@@ -109,14 +105,17 @@ get_windows_version() {
   subKey="ProductName"
 
   #make sure hivexget is installed
-  which hivexget > /dev/null || echo "Installing registry program. Please wait..." && sudo apt install -qq libhivex-bin > /dev/null 2>/dev/null #if not install it
+  if [ ! $(which hivexget) ]; then
+    echo "Installing registry program. Please wait..." 
+    sudo apt install -qqy libhivex-bin > /dev/null 2>/dev/null #if not install it
+  fi
 
   #assign arg 1 as the windows directory
   windowsDirectory="${1}"
 
   #if not passed a valid windows directory, then run mount windows to return one
   [ ! $(find "${windowsDirectory}" -maxdepth 1 -type d -iname 'windows' 2> /dev/null) ] && windowsDirectory="$(mount_windows ro)"
-
+  [ -z "${windowsDirectory}" ] && echo "No Windows Path given." && sleep .5 && exit 1
   #get the location of the config folder and the SOFTWARE hive location
   hiveFolder=$(find "${windowsDirectory}" -maxdepth 3 -ipath "*/windows/system32/config")
   hiveFile=$(find "${hiveFolder}" -maxdepth 1 -type f -iname 'software')
@@ -135,11 +134,11 @@ get_windows_version() {
 #Mount Windows HDD
 mount_windows() {
   defaultLocation="$HOME/winMount" #Set default mount location
-  windowsPartition="$(lsblk -o name,parttype,partflags | grep -E '(0x7|ebd0a0a2-b9e5-4433-87c0)' | grep -v '0x80' | awk '{print $1}')"
+  windowsPartition="$(lsblk -lo name,parttype,partflags | grep -E '(0x7|ebd0a0a2-b9e5-4433-87c0)' | grep -v '0x80' | awk '{print $1}')"
   partitionCount="$(echo ${windowsPartition} | wc -w)" #count how many cadidates we found for windows partitions
   [ "${partitionCount}" -eq 1 ] && windowsPartition="$(echo ${windowsPartition} | grep -v '0x80' | awk '{print $1}')"
   findMounted="$(mount | grep 'fuseblk')" #find any already mounted windows partitions
-  mountCount="$(echo ${findMounted} | wc -w)"
+  mountCount="$(mount | grep 'fuseblk' | wc -l)"
   mode="${1}"
   [ "${mode}" == 'rw' ] && mode="${mode},remove_hiberfile"
   [ -z "${mode}" ] && mode='ro'
@@ -148,7 +147,7 @@ mount_windows() {
   [ -z "${windowsPartition}" ] && return 1
 
   #Check if partition already mounted first
-  if [ "${mountCount}" -eq 6 ]; then
+  if [ "${mountCount}" -eq 1 ]; then
     if [ "${mode}" == 'rw,remove_hiberfile' -a ! "$(echo ${findMounted} | grep 'rw')" ]; then
       windowsPartition="$(echo ${findMounted} | awk '{print $1}' | sed 's:.*/::')"
     else
@@ -162,16 +161,20 @@ mount_windows() {
     fi
   elif [ "${partitionCount}" -ne 1 ]; then
     windowsPartition="$(choose_blkid p)"
-  else
-    windowsPartition="${windowsPartition:2}"
   fi
 
   #mount the partition to the default location
   mkdir -p "${defaultLocation}"
-  sudo umount -l /dev/${windowsPartition} > /dev/null 2>&1
+  sudo umount /dev/${windowsPartition} > /dev/null 2>&1
   [ "${mode}" == 'rw,remove_hiberfile' ] && sudo ntfsfix /dev/${windowsPartition} > /dev/null 2>&1 #if want to mount rw, use ntfsfix first
   sudo mount -o ${mode} /dev/${windowsPartition} "${defaultLocation}" 2> /dev/null
-  if [ "$(find ${defaultLocation} -maxdepth 1 -type d -iname 'Windows')" ]; then #if either users or documents and settings (for xp) folder found then mounted right
+  if [ "${?}" -ne 0 ]; then
+    echo "Could not mount drive successfully." > /dev/stderr
+    echo "Please check your HDD." > /dev/stderr
+    echo "This script will now exit." > /dev/stderr
+    sleep 1.5
+    exit 1
+  elif [ "$(find ${defaultLocation} -maxdepth 1 -type d -iname 'Windows')" ]; then #if either users or documents and settings (for xp) folder found then mounted right
     echo "${defaultLocation}" #return the default path to parent
   else
     return 1 #return error code 1 if could mount properly

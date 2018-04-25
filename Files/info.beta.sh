@@ -1,7 +1,10 @@
 #!/bin/bash
 
 #source sourcefile
-source ./File/commonFunctions.source
+source ./Files/commonFunctions.source
+
+#set adapter variable
+ADAPTER=$(ifconfig -a | grep -B 1 -i "inet addr" | grep -i 'enp' | awk {'print $1'})
 
 #check for root priveledges
 if [ "$(root_check)" == 'n' ]; then
@@ -9,329 +12,238 @@ if [ "$(root_check)" == 'n' ]; then
   exit
 fi
 
-#Random variable set
-SMARTCTL=$(command -v smartctl) #Checks if smartctl is an installed command
-ACPI=$(command -v acpi) #Checks if acpi is an installed command
-ADAPTER=$(ifconfig -a | grep -B 1 -i "inet addr" | grep -i 'enp' | awk {'print $1'})
+#check prerequisite programs
+check_programs() {
+  netUp=$(internet_check)
 
-#clear the screen
-clear
+  if [ ! $(which smartctl) ]; then
+    if [ "$netUp" == 'y' ]; then
+      echo 'Installing smartmontools. Please wait a moment ...'
+      sudo apt-get install -qqy smartmontools > /dev/null 2>/dev/null #if not install it
+    else
+      echo -e "$(tput setaf 1)NO INTERNET DETECTED. YOU MUST HAVE INTERNET TO INSTALL PACKAGES. EXITING IN 2 SECONDS$(tput sgr0)"
+      sleep 2
+      exit 1
+    fi
+  fi
+  if [ ! $(which acpi) ]; then
+    if [ "$netUp" == 'y' ]; then
+      echo 'Installing ACPI. Please wait a moment ...'
+      sudo apt-get install -qqy acpi > /dev/null 2>/dev/null #if not install it
+    else
+      echo -e "$(tput setaf 1)NO INTERNET DETECTED. YOU MUST HAVE INTERNET TO INSTALL PACKAGES. EXITING IN 2 SECONDS$(tput sgr0)"
+      sleep 2
+      exit 1
+    fi
+  fi
+  if [ ! $(which sensors) ]; then
+    if [ "$netUp" == 'y' ]; then
+      echo 'Installing sensors. Please wait a moment ...'
+      sudo apt-get install -qqy sensors > /dev/null 2>/dev/null #if not install it
+    else
+      echo -e "$(tput setaf 1)NO INTERNET DETECTED. YOU MUST HAVE INTERNET TO INSTALL PACKAGES. EXITING IN 2 SECONDS$(tput sgr0)"
+      sleep 2
+      exit 1
+    fi
+  fi
+  if [ ! $(which hivexget) ]; then
+    if [ "$netUp" == 'y' ]; then
+      echo 'Installing hivexget. Please wait a moment ...'
+      sudo apt-get install -qqy libehivex-bin > /dev/null 2>/dev/null #if not install it
+    else
+      echo -e "$(tput setaf 1)NO INTERNET DETECTED. YOU MUST HAVE INTERNET TO INSTALL PACKAGES. EXITING IN 2 SECONDS$(tput sgr0)"
+      sleep 2
+      exit 1
+    fi
+  fi
+}
 
-#Get PC ID
-read -p 'Enter or scan in the PC ID, or type (o) for noncustomer PC: ' PCID
-PCID="$(add_id ${PCID}"
+#make the report
+make_report() {
+  [ "${getHddInfo}" != 'n' ] && run_hdd_sst
+  echo
+  echo 'Gathering info about this computer. This may take a few moments.'
+  set_save_location
+  make_note_header
+  get_system_info
+  get_cpu_info
+  [ "${skipWindowsStuff}" != 'n' ] && get_windows_info
+  get_mac_address
+  [ ! "$(ls -A /sys/class/power_supply)" ] && get_battery_health
+  get_ram_info
+  [ "${checkUserData}" != 'n' ] && get_data_size
+  [ "${getHddInfo}" != 'n' ] && get_hdd_info
+}
 
-if [ "${PCID}" == 'o' ]; then
-  read -p 'Enter a name for this file (will be located under Other in Customer Logs): ' filename
-fi
+#run the hdd test
+run_hdd_sst() {
+  sudo smartctl -t short /dev/${hddBLKID} > /dev/null 2>&1
+}
 
-#Get input from user if they want tests done
-echo
-read -p 'Do you wish to run a HDD test (Y/n): ' hddTest
-echo
-read -p 'Do you want to get user data size (Y/n): ' getData
+#set the save location
+set_save_location() {
+  #Make sure Customer Logs share is mounted
+  if [ "${pcID}" == "o" ]; then
+    pcFolder="$PWD/Files/CustomerLogs/Other"
+    otherName=$(echo "${otherName}" | tr -d ' ')
+    saveLocation="${PWD}/Files/CustomerLogs/Other/${otherName}"
+  else
+    pcFolder=$(find "./Files/CustomerLogs" -maxdepth 2 -type d -name "${pcID}")
+    saveLocation="${pcFolder}/info"
+  fi
+}
 
-#clear screen for info
-clear
+#make header for info note
+make_note_header() {
+  echo '///////////////////////////////////////////////////////////START OF INFO\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\' >> "${saveLocation}"
+  echo >> "${saveLocation}"
+  echo "Info was grabbed on $(today_date)" >> "${saveLocation}"
+  echo >> "${saveLocation}"
+}
 
-echo
-echo 'Gathering info about this computer. This may take a few moments.'
-
-#things from /sys/devices/virtual/dmi/id
-echo 'Getting current computer model ...'
-computerModel=$(cat /sys/devices/virtual/dmi/id/product_name) #computer model
-echo 'Getting serial number ...'
-serialNumber=$(cat /sys/devices/virtual/dmi/id/product_serial) #computer serial number
-echo 'Getting system manufacturer ...'
-systemMaker=$(cat /sys/devices/virtual/dmi/id/sys_vendor) #computer manufacturer
+#get system info
+get_system_info() {
+  echo "----------------PC Info----------------" >> "${saveLocation}"
+  echo 'Getting system manufacturer ...'
+  echo "Computer Manufacturer .  .  .  . . $(cat /sys/devices/virtual/dmi/id/sys_vendor)" >> "${saveLocation}"
+  echo 'Getting current computer model ...'
+  echo "Computer Model . . . . . . . . . . $(cat /sys/devices/virtual/dmi/id/product_name)" >> "${saveLocation}"
+  echo 'Getting serial number ...'
+  echo "Computer Serial Number . . . . . . $(cat /sys/devices/virtual/dmi/id/product_serial)" >> "${saveLocation}"
+}
 
 #getting CPU info
-echo 'Getting CPU info ...'
-cpuCores=$(lscpu -p | tail -n 1 | sed 's/,.*//')
-cpuCores=$(expr $cpuCores + 1)
-cpuInfo=$(cat /proc/cpuinfo | head -n 6 | grep -i 'model name' | cut -c 14-)
-cpuInfo+=' - '
-cpuInfo+="$cpuCores Cores"
+get_cpu_info() {
+  echo 'Getting CPU info ...'
+  echo "Computer CPU . . . . . . . . . . . $(echo $(cat /proc/cpuinfo | grep -m 1 -i 'model name' | sed 's/.*: //' | sed 's:  \+: :' ) - $(grep -c 'processor' /proc/cpuinfo) Cores)" >> "${saveLocation}"
+  echo 'Getting snapshot of CPU temp ...'
+  echo "CPU temp is  . . . . . . . . . . . $(sensors | grep -m 1 -i 'Core 0:' | sed 's/.*://' | awk '{print $1}')" >> "${saveLocation}"
+}
 
-#Getting CPU Temp snapshot
-echo 'Getting snapshot of CPU temp ...'
-cpuTemp=$(sensors | grep -m 1 -i 'Core 0:' | sed 's/.*://' | awk '{print $1}')
-
-#for getting ip address
-echo 'Getting IP address ...'
-ipAddress=$(ip addr | grep -v "127.0.0.1" | grep "inet " | awk '{print $2}' | tr "\n" " ")
+#get windows info
+get_windows_info() {
+  echo 'Trying to get BIOS WinKey ...'
+  echo "Windows Bios Key . . . . . . . . . $([ -f /sys/firmware/acpi/tables/MSDM ] && strings /sys/firmware/acpi/tables/MSDM | tail -n 1)" >> "${saveLocation}"
+  echo 'Getting Windows version ...'
+  echo "Windows Version  .  .  .  .  .  .  $(get_windows_version ${windowsMountLocation})" >> "${saveLocation}"
+  echo >> "${saveLocation}"
+}
 
 #for getting mac address
-echo 'Getting MAC address ...'
-macAddress=$(ip addr | grep link/ether | awk '{print $2}' | tr "\n" " ")
+get_mac_address() {
+  echo 'Getting MAC address ...'
+  echo "MAC Address is $(ip addr | grep link/ether | awk '{print $2}' | tr "\n" " ")" >> "${saveLocation}"
+  echo >> "${saveLocation}"
+}
 
-#make sure smartmontools is installed
-printf "Is smartmontools is installed ... "
-if [ ! $SMARTCTL ]; then #Check to see if smartctl is installed
-	echo no
-	if [ $(internet_check) == 'y' ]; then
-		echo 'Installing smartmontools. Please wait a moment ...'
-		sudo apt install -qq smartmontools > /dev/null 2>/dev/null #if not install it
-	else 
-		echo -e "$(tput setaf 1)NO INTERNET DETECTED. YOU MUST HAVE INTERNET TO INSTALL PACKAGES. EXITING IN 10 SECONDS$(tput sgr0)"
-		sleep 2
-		exit
-	fi
-else echo yes
-fi
+#get battery health
+get_battery_health() {
+  echo "Getting battery health ..."
+  echo "Estimate Battery health is $(acpi -i | grep -v 'charg' | awk '{print $13}')" >> "${saveLocation}"
+  echo >> "${saveLocation}"
+}
 
-#Try to auto mount Windows Partition
-  #declare HDD specific variables
-winMount=$(sudo fdisk -l | grep -v '*' | grep -iE '(HPFS/NTFS/exFAT|Microsoft basic data)' | awk {'print $1'})
-if [ -d $HOME/winMount/Users ]; then
-	winDir=$HOME/winMount
-else
-	winDir=$(mount | grep "$winMount" | awk '{print $3}')
-fi
+#get info about ram and amount
+get_ram_info() {
+  echo 'Calculating approximate RAM amount ...'
+  echo "Approximate amount of system memory is $(free -h | grep 'Mem:' | awk '{print $2}')." >> "${saveLocation}"
+  echo >> "${saveLocation}"
+}
 
-strCheck=${#winMount}
+#get size of user data
+get_data_size() {
+  echo 'Trying to calculate approximate user data size ...'
+  echo "Approximate size of user data is $(du -sh ${windowsMountLocation}/Users/ 2> /dev/null | awk '{print $1}')." >> "${saveLocation}"
+  echo >> "${saveLocation}"
+}
 
-if [ $strCheck -eq 9 ]; then
-        hddID=${winMount%?}
-elif [ $strCheck -eq 14 ]; then
-        hddID=${winMount%??}
-fi
+#get size of hdd
+get_hdd_info() {
+  #make temp file with smart data in it
+  smartReport=$(mktemp)
+  sudo smartctl -a /dev/${hddBLKID} >> "${smartReport}"
+  #get HDD size
+  echo 'Getting HDD size ...'
+  echo "--------------HDD section--------------" >> "${saveLocation}"
+  echo "HDD size:        $(cat ${smartReport} | grep -i 'User Capacity:' | awk '{print $5, $6}')" | tr "[]" " " >> "${saveLocation}"
+  #get HDD model
+  echo 'Getting HDD model ...'
+  cat "${smartReport}" | grep 'Device Model' >> "${saveLocation}"
+  echo >> "${saveLocation}"
+  #get HDD smart pass/fail
+  echo 'Getting SMART pass/fail ...'
+  cat "${smartReport}" | grep 'test result' >> "${saveLocation}"
+  echo >> "${saveLocation}"
+  #display error found warning
+  if [ ! "$(cat ${smartReport} | grep -i 'no errors logged')" ]; then
+    echo "THERE ARE ERRORS FOUND IN THE LOG!" >> "${saveLocation}"
+    echo >> "${saveLocation}"
+  fi
+  #get chosen smart attributes
+  echo 'Getting SMART attributes ...'
+  cat "${smartReport}" | grep -iE '(Raw_Read_Error_Rate|Reallocated_sector|Reported_Uncorrec|spin_retry|power_on|power_cycle|Current_Pending_Sector|Uncorrectable_Error_Cnt|Offline_Uncorrectable)' | awk '{ print $10, "\t", $2 }' >> "${saveLocation}"
+  echo
+  if [ "$(sudo smartctl -a /dev/${hddBLKID} | grep -i 'of test remaining.' >/dev/null)" ]; then
+    #display if waiting on hdd test
+    echo "Waiting for short HDD smart test to run. Average is 2 minutes."
+    echo "Log will be pulled up after running."
+    while (sleep 5; sudo smartctl -a /dev/"${hddBLKID}" | grep -i 'of test remaining.' >/dev/null); do
+      [ $? -ne 0 ] && break
+    done
+  fi
+  echo >> "${saveLocation}"	# We need a blank line for pretty printing
+  echo "Here are the last five SMART test results:" >> "${saveLocation}"
+  echo >> "${saveLocation}"
+  sudo smartctl -l selftest /dev/${hddBLKID} | grep -E '(Test_Description|# 1|# 2|# 3|# 4|# 5)' >> "${saveLocation}"	# show results
+  echo >> "${saveLocation}"
+}
 
-printf "Is there a possible windows drive ... "
-if [ $strCheck -eq 9 ] || [ $strCheck -eq 14 ]; then
-	if [ "$winMount" ]; then
-		echo "yes"
-		printf "Is a windows partition mounted ... "
-		if [ -z "$winDir" ]; then
-			echo "no"
-			echo "Making a mount directory ..."
-			mkdir ~/winMount 2>/dev/null
-			printf "Attempting to automount Windows partition read-only ... "
-			sudo mount -r $winMount ~/winMount 2>/dev/null
-			winDir=$(mount | grep "$winMount" | awk '{print $3}')
-			if [ -d "$winDir/Users" ]; then
-				echo "successful"
-			else 
-				echo "failed"
-				sudo umount -l $winMount
-				choose_partition
-			fi
-		else echo "yes"
-		fi
-	else 
-		echo "no"
-		choose_partition
-	fi
-else
-	echo yes
-	choose_partition
+main() {
+  #clear the screen
+  clear
 
-fi
-###HDD/WINDOWS STUFF###
+  check_programs
 
-if [ $hddID ]; then
-	#for getting HDD size
-	echo Getting HDD size ...
-	hddSize=$(smartctl -a $hddID | grep -i "User Capacity:" | awk '{print $5, $6}')
-fi
+  #get pcid from user
+  pcID=$(get_pcid ", or type (o) for noncustomer PC")
 
-#Try to get User Data size if hdd is mounted
-if [ ! "$getData" == "n" ]; then
-	echo Trying to calculate approximate user data size ...
-	if [ "$winDir" != "NA" ]; then
-		userData=$(du -sh $winDir/Users/ 2> /dev/null | awk '{print $1}')
-	else userData=NA
-	fi
-fi
+  #if noncustomer name file
+  if [ "${pcID}" == 'o' ]; then
+    read -p 'Enter a name for this file (will be located under Other in Customer Logs): ' otherName
+  fi
 
-#Maybe get windows version
-echo Trying to get Windows Version ...
-winVersion=''
-if [ "$winDir" != "NA" ]; then
-	KRNLFILE=$(find -P -O3 "$winDir" -type f -ipath '*/windows/system32/ntoskrnl.exe' -not -ipath "*/windows.old/*" -print0 -quit)
-	if [ ! -z "$KRNLFILE" ]; then
-		for i in win7 vista win8 winblue rs1 th2 Win8.1; do
-			strings "$KRNLFILE" | grep $i > /dev/null && 2> /dev/null
-			if [ $? -eq 0 ]; then
-				case $i in
-					win7)
-						winVersion="Windows 7";
-						;;
-					vista)
-						winVersion="Windows Vista";
-						;;
-					win8)
-						winVersion="Windows 8";
-						;;
-					winblue)
-						winVersion="Windows 8.1";
-						;;
-					rs1|th2|Win8.1)
-						winVersion="Windows 10";
-						;;
-					*)
-						winVersion="Windows Version Unknown";
-						;;
-				esac
-			fi
-		done
-	else
-		winVersion="Couldn't find NTOSKRNL.exe"
-	fi
-else winVersion="Windows Partition not mounted"
-fi
+  #Get input from user if they want tests done
+  echo
+  read -p 'Do you wish to get hdd info (Y/n): ' getHddInfo
+  echo
+  read -p 'Do you want to get user data size (Y/n): ' checkUserData
+  echo
+  read -p 'Do you want to skip Windows stuff (y/N): ' skipWindowsStuff
 
-###END HDD/WINDOWS STUFF###
+  #clear screen for info
+  clear
 
-#for getting RAM amount
-echo Calculating approximate RAM amount ...
-memTotal=$(cat /proc/meminfo | grep "MemTotal" | awk '{print $2}')
-memTotal=$(expr $memTotal / 1048576)
-memTotal=$(expr $memTotal + 1)
+  #If need windows location, mount and get it
+  [ "${skipWindowsStuff}" != 'y' -o ! "${checkUserData}" != 'n' ] && windowsMountLocation="$(mount_windows ro)"
 
-#Check if computer is a laptop
-printf "Is this a laptop... "
-if [ "$(ls -A /sys/class/power_supply)" ]; then
-	echo yes
-	laptopCheck="y"
-else 
-	echo no
-	laptopCheck="n"
-fi
+  #get hdd blkid
+  echo 'Please choose the hdd to test.'
+  echo
+  hddBLKID=$(choose_blkid h)
 
-#If computer is a laptop, run battery check
-if [ $laptopCheck == y ]; then
-	printf "Is ACPI installed ..."
-	if [ ! $ACPI ]; then
-		echo no
-		if [ "$NETUP" -eq 0 ]; then
-			echo 'Installing ACPI. Please wait a moment ...'
-			sudo apt install -qq acpi > /dev/null 2>/dev/null #if not install it
-		else 
-			echo -e "$(tput setaf 1)NO INTERNET DETECTED. YOU MUST HAVE INTERNET TO INSTALL PACKAGES. EXITING IN 10 SECONDS$(tput sgr0)"
-			sleep 10
-			exit
-		fi
-	else
-		echo yes
-	fi
-	echo "Getting battery health ..."
-	batHealth=$(acpi -i | grep -v 'charg' | awk '{print $13}')
-	
-else batHealth=': NA'
-fi
+  #start actually making report
+  make_report
 
-#Get link speed if on ethernet
-echo Checking ethernet link speed ...
-if [ $ADAPTER ]; then
-linkSpeed=$(ethtool $ADAPTER | grep -i speed | awk {'print $2'})
-else
-linkSpeed="NA"
-fi
+  #cuz fuck
+  chmod 777 "${saveLocation}"
 
-# Get Bios windows key if it exists
-echo Trying to get BIOS WinKey ...
-biosKey="NA"
+  if [ ! "${pcID}" == "o" ]; then
+    sudo echo "Y" > "${pcFolder}/ranLogs"
+  fi
 
-if [ -f /sys/firmware/acpi/tables/MSDM ]; then
-	biosKey=$(strings /sys/firmware/acpi/tables/MSDM | tail -n 1)
-fi
+  #Show log
+  cat "${saveLocation}" | less
+}
 
-#Make sure Customer Logs share is mounted
-if [ "$PCID" == "o" ]; then
-	PCFOLDER="$PWD/Files/CustomerLogs/Other"
-	if [ ! -d "$PCFOLDER" ]; then
-		mkdir "$PCFOLDER"
-		chmod -R 777 "$PCFOLDER"
-	fi
-	fileName=$(echo "$fileName" | tr -d ' ')
-	saveLocation="$PWD/Files/CustomerLogs/Other/$fileName"
-else
-	PCFOLDER=$(find . -maxdepth 6 -type d -name $PCID)
-	saveLocation="$PCFOLDER/info"
-fi
-
-#PRINT TO FILE
-echo Creating log file ...
-echo '///////////////////////////////////////////////////////////START OF INFO\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\' >> "$saveLocation"
-echo >> "$saveLocation"
-echo "Info was grabbed on $TIMESTAMP" >> "$saveLocation"
-echo >> "$saveLocation"
-echo "----------------PC Info----------------" >> "$saveLocation"
-echo "Computer Manufacturer .  .  .  . . $systemMaker" >> "$saveLocation"
-echo "Computer Model . . . . . . . . . . $computerModel" >> "$saveLocation"
-echo "Computer Serial Number . . . . . . $serialNumber" >> "$saveLocation"
-echo "Computer CPU . . . . . . . . . . . $cpuInfo" >> "$saveLocation"
-echo "CPU temp is  . . . . . . . . . . . $cpuTemp" >> "$saveLocation"
-echo "Windows Bios Key . . . . . . . . . $biosKey" >> "$saveLocation"
-echo "Windows Version  .  .  .  .  .  .  $winVersion" >> "$saveLocation"
-echo >> "$saveLocation"
-echo "IP Address is $ipAddress" >> "$saveLocation"
-echo "MAC Address is $macAddress" >> "$saveLocation"
-echo "Ethernet link speed is $linkSpeed." >> "$saveLocation"
-echo >> "$saveLocation"
-echo "Estimate Battery health is $batHealth" >> "$saveLocation"
-echo >> "$saveLocation"
-echo "Approximate amount of system memory is $memTotal GB." >> "$saveLocation"
-echo >> "$saveLocation"
-echo "Approximate size of user data is $userData." >> "$saveLocation"
-echo >> "$saveLocation"
-echo "--------------HDD section--------------" >> "$saveLocation"
-echo "HDD size:        $hddSize" | tr "[]" " " >> "$saveLocation"
-
-#Make Variables
-if [ "$hddID" ]; then
-ARGV0=$(basename $0) #sets ARGV0 to script name
-STDERR=/dev/stderr #sets standard error location
-BLKADDRESS=$hddID #Set variable to passed argument (BLK)
-
-# get hdd model
-echo Getting HDD model ...
-smartctl -a $BLKADDRESS | grep "Device Model" >> "$saveLocation"
-echo >> "$saveLocation"
-
-#get basic pass/fail
-echo 'Getting SMART pass/fail ...'
-smartctl -a $BLKADDRESS | grep "test result" >> "$saveLocation"
-echo >> "$saveLocation"
-
-#Checking to see if there are errors in the log
-errorsCheck=$(smartctl -a $BLKADDRESS | grep -i 'no errors logged')
-if [ ! "$errorsCheck" ]; then
-	echo "THERE ARE ERRORS FOUND IN THE LOG!" >> "$saveLocation" 
-	echo >> "$saveLocation"
-fi
-
-
-#Get smart attributes
-echo Getting SMART attributes ...
-smartctl -A $BLKADDRESS | grep -i -E '(Raw_Read_Error_Rate|Reallocated_sector|Reported_Uncorrec|spin_retry|power_on|power_cycle|Current_Pending_Sector|Uncorrectable_Error_Cnt|Offline_Uncorrectable)' | awk '{ print $10, "\t", $2 }' >> "$saveLocation"
-
-echo
-
-# actual scan part
-if [ ! "$hddTest" == 'n' ]; then
-	smartctl -t short $BLKADDRESS >> /dev/null		# start the test in the background
-	echo "Waiting for short HDD smart test to run. Average is 2 minutes."
-	echo "Log will be pulled up after running."
-	while (sleep 5;sudo smartctl -a $BLKADDRESS | grep -i 'of test remaining.' >/dev/null); do
-                if [ $? -ne 0 ]; then
-                        break
-                fi
-        done
-fi
-echo >> "$saveLocation"	# We need a blank line for pretty printing
-echo "Here are the last five SMART test results:" >> "$saveLocation"
-echo >> "$saveLocation"
-smartctl -l selftest $BLKADDRESS | grep -E '(Test_Description|# 1|# 2|# 3|# 4|# 5)' >> "$saveLocation"	# show results
-echo >> "$saveLocation"
-fi
-
-chmod 777 "$saveLocation"
-
-if [ ! "$PCID" == "o" ]; then
-	sudo echo "Y" > "$PCFOLDER/ranLogs"
-fi
-
-#Show log
-cat "$saveLocation" | less
+main
+exit 0
