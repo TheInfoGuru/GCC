@@ -26,6 +26,7 @@ check_programs() {
       exit 1
     fi
   fi
+
   if [ ! $(which acpi) ]; then
     if [ "$netUp" == 'y' ]; then
       echo 'Installing ACPI. Please wait a moment ...'
@@ -36,6 +37,7 @@ check_programs() {
       exit 1
     fi
   fi
+
   if [ ! $(which sensors) ]; then
     if [ "$netUp" == 'y' ]; then
       echo 'Installing sensors. Please wait a moment ...'
@@ -46,10 +48,11 @@ check_programs() {
       exit 1
     fi
   fi
+
   if [ ! $(which hivexget) ]; then
     if [ "$netUp" == 'y' ]; then
       echo 'Installing hivexget. Please wait a moment ...'
-      sudo apt-get install -qqy libehivex-bin > /dev/null 2>/dev/null #if not install it
+      sudo apt-get install -qqy libhivex-bin > /dev/null 2>/dev/null #if not install it
     else
       echo -e "$(tput setaf 1)NO INTERNET DETECTED. YOU MUST HAVE INTERNET TO INSTALL PACKAGES. EXITING IN 2 SECONDS$(tput sgr0)"
       sleep 2
@@ -62,7 +65,6 @@ check_programs() {
 make_report() {
   [ "${getHddInfo}" != 'n' ] && run_hdd_sst
   clear
-  echo
   echo 'Gathering info about this computer. This may take a few moments.'
   set_save_location
   make_note_header
@@ -70,7 +72,7 @@ make_report() {
   get_cpu_info
   [ "${skipWindowsStuff,,}" != 'y' ] && get_windows_info
   get_mac_address
-  [ ! "$(ls -A /sys/class/power_supply)" ] && get_battery_health
+  [ "$(ls -A /sys/class/power_supply)" ] && get_battery_health
   get_ram_info
   [ "${checkUserData,,}" != 'n' ] && get_data_size
   [ "${getHddInfo,,}" != 'n' ] && get_hdd_info
@@ -140,7 +142,7 @@ get_mac_address() {
 #get battery health
 get_battery_health() {
   echo "Getting battery health ..."
-  echo "Estimate Battery health is $(acpi -i | grep -v 'charg' | awk '{print $13}')" >> "${saveLocation}"
+  echo "Estimate Battery health is $(acpi -i | grep -v 'charg' | awk '{print $13}' | tr -d '\n')" >> "${saveLocation}"
   echo >> "${saveLocation}"
 }
 
@@ -227,13 +229,20 @@ main() {
   clear
 
   #If need windows location, mount and get it
-  [ "${skipWindowsStuff,,}" != 'y' -o ! "${checkUserData,,}" != 'n' ] && windowsMountLocation="$(mount_windows ro)"
+  if [ "${skipWindowsStuff,,}" != 'y' -o ! "${checkUserData,,}" != 'n' ]; then
+    echo #added for readability
+    windowsMountLocation="$(mount_windows ro)"
+  fi
 
   if [ "${getHddInfo,,}" != 'n' ]; then
-    #get hdd blkid
-    echo 'Choose the hdd to test.'
-    echo
-    hddBLKID=$(choose_blkid h)
+    if [ -z "${windowsMountLocation}" ]; then
+      #get hdd blkid
+      echo 'Choose the hdd to test.'
+      echo
+      hddBLKID=$(choose_blkid h)
+    else
+      hddBLKID=$(mount | grep "${windowsMountLocation}" | awk '{print $1}' | sed 's/.*\/\(.*\)[0-9]\+/\1/')
+    fi
   fi
 
   #start actually making report

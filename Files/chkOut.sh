@@ -47,7 +47,7 @@ STATUSFILE="$PCFOLDER/status"
 RANLOGSFILE="$PCFOLDER/ranLogs"
 CONTACTSTATUSFILE="$PCFOLDER/contactStatus"
 POWERONFILE="$PCFOLDER/powerOn"
-CHARGERFILE="$PCFOLDER/charger"
+CHARGERFILE="$PCFOLDER/chargerPresent"
 PASSWORDFILE="$PCFOLDER/password"
 
 echo '***************************CUSTOMER INFO***************************' >> "$ARCHIVEFILE"

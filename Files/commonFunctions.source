@@ -36,7 +36,7 @@ choose_blkid() {
 
   #Check to see if need selection list for hdds or for partitions, and set appropriate parameters
   if [ "${1}" == 'p' ]; then
-    idType="partition"
+    idType="partition to mount"
     grepWord="part"
   elif [ "${1}" == 'h' ]; then
     idType="hdd"
@@ -50,10 +50,10 @@ choose_blkid() {
 
   while read -r blkid; do
     blkidList+=("${blkid}") #Adding each blkid (ie sda sdb2 sdc3 ...) to an array called hddList or partionList
-  done <<< "$(lsblk -lo name,size,type,fstype,mountpoint | grep ${grepWord} | awk '{print $1,$2,$4,$5}')" #This runs this command in a subshell each time and returns a single string followed by a newline to stdout, in this case to our read command at the beginning of the while loop
+  done <<< "$(lsblk -lo name,size,type,fstype,mountpoint,serial | grep ${grepWord} | awk '{print $1,$2,$4,$5,$6}')" #This runs this command in a subshell each time and returns a single string followed by a newline to stdout, in this case to our read command at the beginning of the while loop
 
   #Save old column number, and set columns to 1 to give nice list
-  OCOLUMNS="$COLUMNS"
+  OCOLUMNS="${COLUMNS}"
   COLUMNS=1
 
   #show list
@@ -63,7 +63,7 @@ choose_blkid() {
   done
 
   #Reset columns var to normal, and clear blkidList array
-  COLUMNS="$OCOLUMNS"
+  COLUMNS="${OCOLUMNS}"
   blkidList=()
 
   echo "${myChoice}" #return blkid to parent process
@@ -72,7 +72,7 @@ choose_blkid() {
 ###########################FUNCTION START###########################
 #check for root priveledges
 root_check() {
-  if [ "$EUID" -eq 0 ]; then
+  if [ "${EUID}" -eq 0 ]; then
     echo "y" #return "y" to parent process
   else
     echo "n" #return "n" to parent process
@@ -106,7 +106,7 @@ get_windows_version() {
 
   #make sure hivexget is installed
   if [ ! $(which hivexget) ]; then
-    echo "Installing registry program. Please wait..." 
+    echo "Installing registry program. Please wait..." > /dev/stderr
     sudo apt install -qqy libhivex-bin > /dev/null 2>/dev/null #if not install it
   fi
 
@@ -133,8 +133,11 @@ get_windows_version() {
 ###########################FUNCTION START###########################
 #Mount Windows HDD
 mount_windows() {
-  defaultLocation="$HOME/winMount" #Set default mount location
+  defaultLocation="${HOME}/winMount" #Set default mount location
   windowsPartition="$(lsblk -lo name,parttype,partflags | grep -E '(0x7|ebd0a0a2-b9e5-4433-87c0)' | grep -v '0x80' | awk '{print $1}')"
+  if [ -z "${windowsPartition}" ]; then
+    windowsPartition="$(lsblk -lo name,parttype,partflags | grep -E '(0x7|ebd0a0a2-b9e5-4433-87c0)' | awk '{print $1}')"
+  fi
   partitionCount="$(echo ${windowsPartition} | wc -w)" #count how many cadidates we found for windows partitions
   [ "${partitionCount}" -eq 1 ] && windowsPartition="$(echo ${windowsPartition} | grep -v '0x80' | awk '{print $1}')"
   findMounted="$(mount | grep 'fuseblk')" #find any already mounted windows partitions
