@@ -18,7 +18,7 @@ find_PC() {
 	for i in $(find "$CUSFOLDER" -maxdepth 6 -type f -name "log")
 	        do
 	                IFS=
-	                idDisplayArray+=($(echo $i | egrep -o "ID[0-9][0-9]?[0-9]?"))
+	                idDisplayArray+=($(echo $i | egrep -o "ID[0-9][0-9]?[0-9]?[0-9]?"))
 	                idFolderArray+=($(echo ${i%/*}))
 	        done
 	IFS=${old_IFS}

@@ -172,6 +172,9 @@ get_hdd_info() {
   #get HDD model
   echo 'Getting HDD model ...'
   cat "${smartReport}" | grep 'Device Model' >> "${saveLocation}"
+  #get HDD serial number
+  echo 'Getting HDD serial number ...'
+  cat "${smartReport}" | grep 'Serial Number:' >> "${saveLocation}"
   echo >> "${saveLocation}"
   #get HDD smart pass/fail
   echo 'Getting SMART pass/fail ...'
