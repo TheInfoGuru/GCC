@@ -93,7 +93,7 @@ internet_check() {
 #Add ID to beginning to PCID if not present
 add_id() {
   PCID="${1}" #Grap PCID from arg1
-  [ "${PCID}" != 'o' -a "${PCID:0:2}" != 'ID' -a "${PCID}" != 'n' ] && PCID=$(echo ${PCID} | sed -e 's/^/ID/') #If PCID isn't an "o" or have ID already in front of the number, and the letters "ID"
+  [ "${PCID}" != 'o' -a "${PCID:0:2}" != 'ID' -a "${PCID}" != 'n' -a -n "${PCID}" ] && PCID=$(echo ${PCID} | sed -e 's/^/ID/') #If PCID isn't an "o" or have ID already in front of the number, and the letters "ID"
   echo ${PCID} #return formated PCID out to parent
 }
 
