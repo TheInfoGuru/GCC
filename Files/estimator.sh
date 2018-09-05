@@ -33,7 +33,7 @@ main_menu(){
         clear
         display_banner
         echo -e "${MENU}************************************************************************${NORMAL}"
-        echo -e "${MENUTITLE}  ************************* ESTIMATOR TOOL **************************${NORMAL}"
+        echo -e "${ENTER_LINE}  ************************* ESTIMATOR TOOL **************************${NORMAL}"
         echo -e "${MENU}************************************************************************${NORMAL}"
         echo -e "${MENU}**${NUMBER} 1)${MENUITEM} HDDs/SSDs ${NORMAL}"
         echo -e "${MENU}**${NUMBER} 2)${MENUITEM} Laptop Screens ${NORMAL}"
@@ -41,12 +41,12 @@ main_menu(){
         echo -e "${MENU}**${NUMBER} 4)${MENUITEM} Labor ${NORMAL}"
         echo -e "${MENU}**${NUMBER} 5)${MENUITEM} Misc Item ${NORMAL}"
         echo -e "${MENU}**${NUMBER} 6)${MENUITEM} Misc Service ${NORMAL}"
-        echo -e "${MENU}**${NUMBER} 7)${MENUITEM} Exit Estimator Tool ${NORMAL}"
+        echo -e "${MENU}**${NUMBER} 10)${MENUITEM} Exit Estimator Tool ${NORMAL}"
         echo -e "${MENU}***********************************************************************${NORMAL}"
         echo -e "${ENTER_LINE}Please enter a menu option. ${NORMAL}"
         read -p ': ' optMain
 
-while [ optMain != '10' ]; do
+while true; do
   case "${optMain}" in
     1) clear;
       main_menu;
@@ -68,6 +68,10 @@ while [ optMain != '10' ]; do
       main_menu;
       ;;
 
+    10) clear;
+      break;
+      ;;
+
     *)clear;
       main_menu;
       ;;
@@ -85,8 +89,11 @@ done
 
 
 function main(){
-  userChoice="$(get_user_id)"
-echo $userChoice
+#  userChoice="$(get_user_id)"
+
+  main_menu
+
+echo after main menu
 }
 
 main
