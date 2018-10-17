@@ -8,6 +8,8 @@ IDNUMBER=
 nameArray=()
 folderArray=()
 
+#source "./Files/commonFunctions.source"
+
 c_timestamp() {
         date | awk '{print $2,$3,$4}'
 }
@@ -69,23 +71,38 @@ find_PC() {
 }
 
 make_note() {
+        if [ "${editNoteOnly}" == 'y' ]; then
+          nano "${PCFOLDER}/notes"
+          exit 0
+        fi
+
 	if [ "$1" ]; then
 		notesList="$1"
 		PCFOLDER="$2"
 	fi
 
-	echo -e "@@@@@ $(c_timestamp) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> "$PCFOLDER/notes"
+	echo
+	echo "Below are the notes for the chosen PCID so far."
+	echo
+        echo '****************************************************************************'
+        cat "${PCFOLDER}/notes"
+        echo '****************************************************************************'
+        echo 'Please enter your note. It will be formatted automatically in the file.'
+	echo
+        read -ep '>' note
+	echo -e "@@@@@ $(c_timestamp) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> "$PCFOLDER/notes"
 
 	if [ "$notesList" ]; then
 		echo -n "$notesList" >> "$PCFOLDER/notes"
 	fi
-	nano +999,999 -L "$PCFOLDER/notes"
-	echo  >> "$PCFOLDER/notes"
+#	nano +999,999 -L "$PCFOLDER/notes"
+        echo "${note}" | fold -sw 68 >> "$PCFOLDER/notes"
 	echo  >> "$PCFOLDER/notes"
 }
 
 main() {
 clear
+
 echo '***********************************************************************************************'
 printf "Enter or scan in PCID or type (c) to search for computer by customer name: "
 read choice1
@@ -216,7 +233,11 @@ else
 fi
 }
 
-if [ "$1" ]; then
+if [ "${1}" == 'm' ]; then
+  editNoteOnly='y'
+fi
+
+if [ -n "$1" -a "${1}" != 'm' ]; then
 	make_note "$1" "$2"
 	exit 0
 fi

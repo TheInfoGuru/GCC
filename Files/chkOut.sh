@@ -49,7 +49,7 @@ CONTACTSTATUSFILE="$PCFOLDER/contactStatus"
 POWERONFILE="$PCFOLDER/powerOn"
 CHARGERFILE="$PCFOLDER/chargerPresent"
 PASSWORDFILE="$PCFOLDER/password"
-
+ESTIMATEFILE="$PCFOLDER/estimate"
 echo '***************************CUSTOMER INFO***************************' >> "$ARCHIVEFILE"
 cat "$CUSINFOFILE" >> "$ARCHIVEFILE"
 echo >> "$ARCHIVEFILE"
@@ -57,8 +57,14 @@ echo >> "$ARCHIVEFILE"
 if [ -f "$NOTESFILE" ]; then
 echo '*******************************NOTES*******************************' >> "$ARCHIVEFILE"
 cat "$NOTESFILE" >> "$ARCHIVEFILE"
-echo >> "$ARCHIVEFILE"
 rm -f "$NOTESFILE"
+fi
+
+if [ -f "$ESTIMATEFILE" ]; then
+echo '******************************ESTIMATE*****************************' >> "$ARCHIVEFILE"
+cat "$ESTIMATEFILE" >> "$ARCHIVEFILE"
+echo >> "$ARCHIVEFILE"
+rm -f "$ESTIMATEFILE"
 fi
 
 echo '*******************************LOG**********************************' >> "$ARCHIVEFILE"

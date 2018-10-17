@@ -55,7 +55,7 @@ new_pcid() {
   echo
 
   #Type in the customer's name
-  read -p 'Type in customers name: ' customerName
+  read -ep 'Type in customers name: ' customerName
   echo
 
   #Set more variables (locations)
@@ -73,9 +73,6 @@ new_pcid() {
 
   #Make new folder for new computer under PC ID name
   pcFolderLocation="${customerFolder}/${pcid}"
-  mkdir "${pcFolderLocation}" 2> /dev/null
-  chmod -R 777 "${pcFolderLocation}"
-
   computer_questions
 }
 
@@ -85,7 +82,7 @@ make_customer() {
   mkdir "${customerFolder}"
   echo "$customerName" > "${customerFolder}/info.cus"
   break_line > /dev/stderr
-  read -p 'Please enter customer phone number with hyphens (e.g. 251-123-4567): ' phoneNumber
+  read -ep 'Please enter customer phone number with hyphens (e.g. 251-123-4567): ' phoneNumber
   echo "${phoneNumber}" >> "${customerFolder}/info.cus"
   echo "${phoneNumber}"
 }
@@ -96,7 +93,7 @@ check_customer() {
   break_line
   cat "${customerFolder}/info.cus"
   echo
-  read -p 'Is this the correct customer (Y/n): ' customerConfirmation
+  read -ep 'Is this the correct customer (Y/n): ' customerConfirmation
   echo
 
   if [ "${customerConfirmation}" == 'n' ]; then
@@ -107,7 +104,7 @@ check_customer() {
   fi
 
   break_line
-  read -p 'Need to update customer info? (y/N): ' updateCustomerInfo
+  read -ep 'Need to update customer info? (y/N): ' updateCustomerInfo
   echo
 
   #If not correct, open in editor
@@ -118,20 +115,20 @@ check_customer() {
 computer_questions() {
   #Make PC notes
   break_line
-  read -p 'What is the issue the PC is experiencing (reason for check in): ' computerIssue
+  read -ep 'What is the issue the PC is experiencing (reason for check in): ' computerIssue
   echo
 
   #Create PC status file indicating it has been checked in, and make first line check-in and date
   break_line
-  read -p 'Is the computer being dropped off with a power cord (y/n): ' chargerPresent
+  read -ep 'Is the computer being dropped off with a power cord (y/n): ' chargerPresent
   echo
 
   break_line
-  read -p 'Does the PC power on and POST (y/n): ' computerPowersOn
+  read -ep 'Does the PC power on and POST (y/n): ' computerPowersOn
   echo
 
   break_line
-  read -p 'What is the password to the PC (press ENTER for no password): ' computerPassword
+  read -ep 'What is the password to the PC (press ENTER for no password): ' computerPassword
   echo
 
   make_tracker_files
@@ -139,9 +136,14 @@ computer_questions() {
 
 make_tracker_files() {
   #Write to files
+  if [ "${upId}" == 'y' ]; then
+    mkdir "${pcFolderLocation}" 2> /dev/null
+    chmod -R 777 "${pcFolderLocation}"
+  fi
+
   echo -e "[$(c_timestamp)] Checked in computer." >> "${pcFolderLocation}/log"
-  echo -e "@@@@@ $(c_timestamp) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> "${pcFolderLocation}/notes"
-  echo "CheckIn - $computerIssue" >> "${pcFolderLocation}/notes"
+  echo -e "@@@@@ $(c_timestamp) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> "${pcFolderLocation}/notes"
+  echo "CheckIn - $computerIssue" | fold -sw 70 >> "${pcFolderLocation}/notes"
   echo >> "${pcFolderLocation}/notes"
   echo $chargerPresent > "${pcFolderLocation}/chargerPresent"
   echo $computerPowersOn > "${pcFolderLocation}/powerOn"

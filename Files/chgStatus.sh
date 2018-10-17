@@ -131,6 +131,7 @@ make_change() {
 
 #source and make new note if appropriate
 make_started_note() {
+  clear
   if [ "$notesList" ]; then
     source "./Files/mkNote.sh" "$notesList" "$pcFolder"
   fi

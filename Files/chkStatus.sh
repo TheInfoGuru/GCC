@@ -76,7 +76,7 @@ find_PC() {
 make_report() {
 	TMPREPORT=$(mktemp)
 	echo '&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&' >> "$TMPREPORT"
-	echo "&&&&&&&&&&&&&&&&& REPORT FOR COMPUTER LABEL $IDNUMBER &&&&&&&&&&&&&&&&&&&&" >> "$TMPREPORT"
+	echo "&&&&&&&&&&&&&&& REPORT FOR COMPUTER LABEL $IDNUMBER &&&&&&&&&&&&&&&&&&&&" >> "$TMPREPORT"
 	echo '&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&' >> "$TMPREPORT"
 	echo >> "$TMPREPORT"
 	echo '****************************CUSTOMER INFO****************************' >> "$TMPREPORT"
@@ -98,6 +98,11 @@ make_report() {
 	if [ -f "$PCFOLDER/notes" ]; then
 		echo '*******************************NOTES*********************************' >> "$TMPREPORT"
 		cat "$PCFOLDER/notes" >> "$TMPREPORT"
+	fi
+
+	if [ -f "$PCFOLDER/estimate" ]; then
+		echo '******************************ESTIMATE*******************************' >> "$TMPREPORT"
+		cat "$PCFOLDER/estimate" >> "$TMPREPORT"
 		echo >> "$TMPREPORT"
 	fi
 
