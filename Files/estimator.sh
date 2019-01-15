@@ -214,16 +214,17 @@ function main_menu(){
   echo -e "${MENU}**${NUMBER} 1)${MENUITEM} HDDs/SSDs ${NORMAL}"
   echo -e "${MENU}**${NUMBER} 2)${MENUITEM} Laptop Screens ${NORMAL}"
   echo -e "${MENU}**${NUMBER} 3)${MENUITEM} Services & Labor ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 4)${MENUITEM} DC Jack ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 5)${MENUITEM} Motherboard ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 6)${MENUITEM} Misc Part ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 7)${MENUITEM} Misc Service ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 8)${MENUITEM} Discount ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 9)${MENUITEM} Delete Estimate Item ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 10)${MENUITEM} Display Current Estimate ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 11)${MENUITEM} Print Current Estimate ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 12)${MENUITEM} Erase Current Estimate ${NORMAL}"
-  echo -e "${MENU}**${NUMBER} 13)${MENUITEM} Part Price Lookup ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 4)${MENUITEM} Laptop Keyboard ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 5)${MENUITEM} DC Jack ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 6)${MENUITEM} Motherboard ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 7)${MENUITEM} Misc Part ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 8)${MENUITEM} Misc Service ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 9)${MENUITEM} Discount ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 10)${MENUITEM} Delete Estimate Item ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 11)${MENUITEM} Display Current Estimate ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 12)${MENUITEM} Print Current Estimate ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 13)${MENUITEM} Erase Current Estimate ${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 14)${MENUITEM} Part Price Lookup ${NORMAL}"
   echo -e "${MENU}**${NUMBER} 99)${MENUITEM} Exit Estimator Tool ${NORMAL}"
   echo -e "${MENU}***********************************************************************${NORMAL}"
   echo -e "${ENTER_LINE}Please enter a menu option. ${NORMAL}"
@@ -247,51 +248,56 @@ function main_menu(){
         ;;
 
       4) clear;
-        dc_jack_choice;
+        keyboard_choice;
         main_menu;
         ;;
 
       5) clear;
-        part_choice 'y';
+        dc_jack_choice;
         main_menu;
         ;;
 
       6) clear;
-        part_choice 'n';
+        part_choice 'y';
         main_menu;
         ;;
 
       7) clear;
-        misc_service_choice;
+        part_choice 'n';
         main_menu;
         ;;
 
       8) clear;
-        add_discount;
+        misc_service_choice;
         main_menu;
         ;;
 
       9) clear;
-        delete_estimate_item;
+        add_discount;
         main_menu;
         ;;
 
       10) clear;
-        display_current_estimate;
+        delete_estimate_item;
         main_menu;
         ;;
 
       11) clear;
-        print_current_estimate;
+        display_current_estimate;
         main_menu;
         ;;
 
       12) clear;
-        erase_current_estimate;
+        print_current_estimate;
         main_menu;
         ;;
 
       13) clear;
+        erase_current_estimate;
+        main_menu;
+        ;;
+
+      14) clear;
         part_price_lookup;
         main_menu;
         ;;
@@ -881,6 +887,7 @@ function services_labor_menu(){
   echo -e "${MENU}**${NUMBER} 9)${MENUITEM} Printer Setup${NORMAL}"
   echo -e "${MENU}**${NUMBER} 10)${MENUITEM} Clone HDD/SSD${NORMAL}"
   echo -e "${MENU}**${NUMBER} 11)${MENUITEM} Laptop Screen Installation${NORMAL}"
+  echo -e "${MENU}**${NUMBER} 12)${MENUITEM} Password Reset${NORMAL}"
   echo -e "${MENU}**${NUMBER} 99)${MENUITEM} Return to Estimator Main Menu ${NORMAL}"
   echo -e "${MENU}***********************************************************************${NORMAL}"
   echo -e "${ENTER_LINE}Please enter a menu option. ${NORMAL}"
@@ -950,6 +957,12 @@ function services_labor_menu(){
 
       11) clear;
         echo "${SCREEN_INSTALL}" >> "${fileLocation}";
+        retotal;
+        services_labor_menu;
+        ;;
+
+      12) clear;
+        echo "${PASSWORD_RESET}" >> "${fileLocation}";
         retotal;
         services_labor_menu;
         ;;
@@ -1041,6 +1054,38 @@ function dc_jack_choice() {
     echo "\$${dcJackPrice} ..... ${dcJackDescription} | Model: ${dcJackModel} | ${amazonShortlink}" >> "${fileLocation}"
   else
     echo "\$${dcJackPrice} ..... ${dcJackDescription} | Model: ${dcJackModel} | ${ebayShortlink} | ${amazonShortlink}" >> "${fileLocation}"
+  fi
+
+  retotal
+  main_menu
+}
+
+############################KEYBOARD####################################
+function keyboard_choice() {
+  echo
+  keyboardPrice=65
+  echo
+  read -ep 'Enter Keyboard model number: ' keyboardModel
+  echo
+  read -ep 'Enter Keyboard Description: ' keyboardDescription
+  echo
+  shortLinkAnswer=
+  read -p 'Add shortlink to part search ([e]bay|[a]mazon|[B]oth|[n]either): ' shortLinkAnswer
+
+  keyword="$(echo ${keyboardModel} | sed 's/ /\%20/g')"
+  ebayURL="https://www.ebay.com/sch/i.html?_nkw=${keyword}"
+  ebayShortlink=$(curl -s "http://api.bit.ly/v3/shorten?login=computerresourceal&apiKey=R_c2c075a7331c48c1ab93ba6ed79cdc9b&longURL=${ebayURL}&format=txt")
+  amazonURL="https://www.amazon.com/s/field-keywords=${keyword}"
+  amazonShortlink=$(curl -s "http://api.bit.ly/v3/shorten?login=computerresourceal&apiKey=R_c2c075a7331c48c1ab93ba6ed79cdc9b&longURL=${amazonURL}&format=txt")
+
+  if [ "${shortLinkAnswer,,}" == 'n' ]; then
+    echo "\$${keyboardPrice} ..... ${keyboardDescription} | Model: ${keyboardModel} @" >> "${fileLocation}"
+  elif [ "${shortLinkAnswer,,}" == 'e' ]; then
+    echo "\$${keyboardPrice} ..... ${keyboardDescription} | Model: ${keyboardModel} | ${ebayShortlink} @" >> "${fileLocation}"
+  elif [ "${shortLinkAnswer,,}" == 'a' ]; then
+    echo "\$${keyboardPrice} ..... ${keyboardDescription} | Model: ${keyboardModel} | ${amazonShortlink} @" >> "${fileLocation}"
+  else
+    echo "\$${keyboardPrice} ..... ${keyboardDescription} | Model: ${keyboardModel} | ${ebayShortlink} | ${amazonShortlink} @" >> "${fileLocation}"
   fi
 
   retotal

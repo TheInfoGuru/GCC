@@ -7,7 +7,7 @@ source ./Files/commonFunctions.source
 clear
 
 #Set location variables
-CURRENTLOCATION="${HOME}/.current_drawer"
+TEMPLOCATIONBEG="${HOME}/.current_drawer"
 STORELOCATION="${PWD}/DrawerCounts"
 CASHINFILE="${HOME}/.currentCashIn"
 CASHOUTFILE="${HOME}/.currentCashOut"
@@ -42,15 +42,14 @@ start_count() {
 
 #Print to current drawer count file
 start_drawer_file() {
-  echo "****************$(today_date)****************" >> ${CURRENTLOCATION}
-  echo '======= BEGINNING DRAWER =======' >> ${CURRENTLOCATION}
-  echo "Number of Twenties . . . . ${beginningTwenties}" >> ${CURRENTLOCATION}
-  echo "Number of Tens . . . . . . ${beginningTens}" >> ${CURRENTLOCATION}
-  echo "Number of Fives . . . . . .${beginningFives}" >> ${CURRENTLOCATION}
-  echo "Number of Ones . . . . . . ${beginningOnes}" >> ${CURRENTLOCATION}
-  echo >> ${CURRENTLOCATION}
-  echo "Beginning Drawer Balance: \$$beginningBalance" >> ${CURRENTLOCATION}
-  echo '---    ---    ---    ---    ---    ---' >> ${CURRENTLOCATION}
+  echo "****************$(today_date)****************" >> ${TEMPLOCATIONBEG}
+  echo '======= BEGINNING DRAWER =======' >> ${TEMPLOCATIONBEG}
+  echo "Number of Twenties . . . . ${beginningTwenties}" >> ${TEMPLOCATIONBEG}
+  echo "Number of Tens . . . . . . ${beginningTens}" >> ${TEMPLOCATIONBEG}
+  echo "Number of Fives . . . . . .${beginningFives}" >> ${TEMPLOCATIONBEG}
+  echo "Number of Ones . . . . . . ${beginningOnes}" >> ${TEMPLOCATIONBEG}
+  echo >> ${TEMPLOCATIONBEG}
+  echo "Beginning Drawer Balance: \$$beginningBalance" >> ${TEMPLOCATIONBEG}
 
   return 0
 }
@@ -81,7 +80,7 @@ end_count() {
   done
 
   #Get and calculate ending drawer amounts
-  beginningBalance=$(grep 'Beginning Drawer' ${CURRENTLOCATION} | awk '{print $4}' | tr -d '$')
+  beginningBalance=$(grep 'Beginning Drawer' ${TEMPLOCATIONBEG} | awk '{print $4}' | tr -d '$')
   twentyAmount=$(bc < <(echo "${endTwenties} * 20"))
   tenAmount=$(bc< <(echo "${endTens} * 10"))
   fiveAmount=$(bc < <(echo "${endFives} * 5"))
@@ -91,6 +90,7 @@ end_count() {
 
   display_user_summary
   end_drawer_file
+  print_file
   cleanup_files
 }
 
@@ -118,45 +118,66 @@ display_user_summary() {
 }
 
 end_drawer_file() {
+  TEMPLOCATIONEND="$(mktemp)"
   #print daily summary to storage file
-  echo >> ${CURRENTLOCATION}
-  echo '======== ENDING DRAWER ========' >> ${CURRENTLOCATION}
-  echo "Number of Twenties . . . . ${endTwenties}" >> ${CURRENTLOCATION}
-  echo "Number of Tens . . . . . . ${endTens}" >> ${CURRENTLOCATION}
-  echo "Number of Fives . . . . . .${endFives}" >> ${CURRENTLOCATION}
-  echo "Number of Ones . . . . . . ${endOnes}" >> ${CURRENTLOCATION}
-  echo >> ${CURRENTLOCATION}
-  echo "Ending Drawer Balance" >> ${CURRENTLOCATION}
-  echo "\$${endingBalance}" >> ${CURRENTLOCATION}
-  echo >> ${CURRENTLOCATION}
-  echo "Ending QB Cash Total" >> ${CURRENTLOCATION}
-  echo "\$${qbTotal}" >> ${CURRENTLOCATION}
-  echo >> ${CURRENTLOCATION}
-  echo "Ending CC Batch Total" >> ${CURRENTLOCATION}
-  echo "\$${ccTotal}" >> ${CURRENTLOCATION}
-  echo >> ${CURRENTLOCATION}
-  echo "Cash Out For the Day" >> ${CURRENTLOCATION}
-  echo "\$${cashOut}" >> ${CURRENTLOCATION}
-  echo >> ${CURRENTLOCATION}
-  echo "Cash In For the Day" >> ${CURRENTLOCATION}
-  echo "\$${cashIn}" >> ${CURRENTLOCATION}
-  echo >> ${CURRENTLOCATION}
-  echo "Actual Cash Deposit" >> ${CURRENTLOCATION}
-  echo "\$${cashDeposit}" >> ${CURRENTLOCATION}
-  echo '###########################################################' >> ${CURRENTLOCATION}
-  echo >> ${CURRENTLOCATION}
-  cat ${CURRENTLOCATION} >> ${STORELOCATION}
+  echo >> ${TEMPLOCATIONEND}
+  echo '======== ENDING DRAWER ========' >> ${TEMPLOCATIONEND}
+  echo "Number of Twenties . . . . ${endTwenties}" >> ${TEMPLOCATIONEND}
+  echo "Number of Tens . . . . . . ${endTens}" >> ${TEMPLOCATIONEND}
+  echo "Number of Fives . . . . . .${endFives}" >> ${TEMPLOCATIONEND}
+  echo "Number of Ones . . . . . . ${endOnes}" >> ${TEMPLOCATIONEND}
+  echo >> ${TEMPLOCATIONEND}
+  echo "Ending Drawer Balance" >> ${TEMPLOCATIONEND}
+  echo "\$${endingBalance}" >> ${TEMPLOCATIONEND}
+  echo >> ${TEMPLOCATIONEND}
+  echo "Ending QB Cash Total" >> ${TEMPLOCATIONEND}
+  echo "\$${qbTotal}" >> ${TEMPLOCATIONEND}
+  echo >> ${TEMPLOCATIONEND}
+  echo "Ending CC Batch Total" >> ${TEMPLOCATIONEND}
+  echo "\$${ccTotal}" >> ${TEMPLOCATIONEND}
+  echo >> ${TEMPLOCATIONEND}
+  echo "Cash Out For the Day" >> ${TEMPLOCATIONEND}
+  echo "\$${cashOut}" >> ${TEMPLOCATIONEND}
+  echo >> ${TEMPLOCATIONEND}
+  echo "Cash In For the Day" >> ${TEMPLOCATIONEND}
+  echo "\$${cashIn}" >> ${TEMPLOCATIONEND}
+  echo >> ${TEMPLOCATIONEND}
+  echo "Actual Cash Deposit" >> ${TEMPLOCATIONEND}
+  echo "\$${cashDeposit}" >> ${TEMPLOCATIONEND}
+  echo '###########################################################' >> ${TEMPLOCATIONEND}
+  echo >> ${TEMPLOCATIONEND}
+  cat ${TEMPLOCATIONBEG} >> ${STORELOCATION}
+  cat ${TEMPLOCATIONEND} >> ${STORELOCATION}
+}
+
+LPRBACK() {
+  [ ! $(command -v enscript) ] && echo "Installing enscript. Please wait." && $(sudo apt install -qqy enscript)
+  ENSCRIPT="--no-header --margins=36:36:36:36 --font=Times-Roman12 --word-wrap --media=Letter"
+  export ENSCRIPT
+  /usr/bin/enscript -p - ${1} | /usr/bin/lpr -P "HPBACK"
+}
+
+print_file() {
+  PRINTFILE=$(mktemp)
+  cat "${TEMPLOCATIONBEG}" >> "${PRINTFILE}"
+  cat "${TEMPLOCATIONEND}" >> "${PRINTFILE}"
+  LPRBACK "${PRINTFILE}" > /dev/null 2>&1
 }
 
 cleanup_files() {
-  [ -f "${CURRENTLOCATION}" ] && rm ${CURRENTLOCATION}
+  [ -f "${TEMPLOCATIONBEG}" ] && rm ${TEMPLOCATIONBEG}
+  [ -f "${TEMPLOCATIONEND}" ] && rm ${TEMPLOCATIONEND}
+  [ -f "${PRINTFILE}" ] && rm ${PRINTFILE}
   [ -f "${CASHINFILE}" ] && rm ${CASHINFILE}
   [ -f "${CASHOUTFILE}" ] && rm ${CASHOUTFILE}
-
 }
-if [ -f "${CURRENTLOCATION}" ]; then
-	end_count
-else
-	start_count
-fi
 
+main() {
+  if [ -f "${TEMPLOCATIONBEG}" ]; then
+    end_count
+  else
+    start_count
+  fi
+}
+
+main

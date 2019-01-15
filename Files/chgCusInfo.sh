@@ -50,7 +50,7 @@ main() {
 	echo
 
 	old_IFS=$IFS
-	for i in $(find . -maxdepth 6 -type f -name "info.cus"); do
+	for i in $(find . -maxdepth 4 -type f -name "info.cus"); do
 	        IFS=
 	        nameArray+=($(egrep -C 99 -i "$searchTerm" "$i" | head -n 1))
 		tempVar=$(egrep -il "$searchTerm" "$i")

@@ -1,133 +1,82 @@
 #!/bin/bash
 
-#source sourcefile
-source ./Files/commonFunctions.source
+source "./Files/commonFunctions.source"
+LOGFOLDER="./Files/CustomerLogs"
+PS3=$'\nPlease enter your choice: '
+COLUMNS=1
+dontSearch='estimate|location|notes|log|status|check_in|dataBackup|info|chargerPresent|charger|contactStatus|password|powerOn|ranLogs'
 
+function get_archive_list() {
+  break_line
+  echo 'List of possible archive files'
+  echo
+  select opt in $(find "${pcidFolder}" -maxdepth 1 -type f | grep -v -E "(${dontSearch})" | sed 's/^.*\///g'); do
+    archiveFile="${opt}"
+    break
+  done
 
-CUSFOLDER=
-nameArray=()
-folderArray=()
+  if [ -z "${archiveFile}" ]; then
+    echo "No archive files found for that PCID."
+    sleep 1.5
+    exit 1
+  fi
 
+  cat "${pcidFolder}/${archiveFile}" | less
 
-openInfo() {
-	nano "$CUSFOLDER/info.cus"
 }
 
-openNotes() {
-	nano "$CUSFOLDER/notes.cus"
+function search_by_name() {
+  name=$(echo "${choice}" | sed 's/ //g')
+  break_line
+  echo 'List of possible customers'
+  echo
+  select opt in $(find "${LOGFOLDER}" -maxdepth 1 -type d | grep -i "${name}" | sed 's/^.*\///g'); do
+    customer="${opt}"
+    break
+  done
+
+  if [ -z "${customer}" ]; then
+    echo "No customers found by that name."
+    sleep 1.5
+    exit 1
+  fi
+
+  customerFolder="${LOGFOLDER}/${customer}"
+  echo
+  break_line
+  echo 'List of possible PCIDs'
+  echo
+  select opt in $(find "${customerFolder}" -maxdepth 1 -type d | grep 'ID' | sed 's/^.*\///g'); do
+    pcid="${opt}"
+    break
+  done
+
+  pcidFolder="${customerFolder}/${pcid}"
+  echo
+  get_archive_list
 }
 
-openBoth() {
-	nano "$CUSFOLDER/info.cus"
-	nano "$CUSFOLDER/notes.cus"
+function search_by_pcid() {
+  pcid="${choice}"
+
+  pcidFolder=$(find "${LOGFOLDER}" -maxdepth 2 -type d | grep -i "${pcid}")
+
+  if [ -z "${pcidFolder}" ]; then
+    echo "No customers found with that PCID."
+    sleep 1.5
+    exit 1
+  fi
+
+  get_archive_list
 }
 
-openNotesInfoChoice() {
-	echo
-	echo '***************************************************************'
-	printf 'Would you like change the customer (i)nfo, (n)otes, or (b)oth: '
-	read choice1
-
-	if [ "$choice1" == "i" -o "$choice1" == "I" ]; then
-		openInfo
-	elif [ "$choice1" == "n" -o "$choice1" == "N" ]; then
-		openNotes
-	elif [ "$choice1" == "b" -o "$choice1" == "B" ]; then
-		openBoth
-	else
-		echo 'PLEASE EITHER CHOOSE "i" OR "n" OR "b" FOR YOUR CHOICE.'
-		sleep 3
-		openNotesInfoChoice
-	fi
-}
-
-
-main() {
-	clear
-
-	echo '***************************************************************'
-	printf "Please enter identifying info (name, phone \#, etc...) to look for: "
-	read searchTerm
-	echo
-
-	old_IFS=$IFS
-	for i in $(find . -maxdepth 6 -type f -name "info.cus"); do
-	        IFS=
-	        nameArray+=($(egrep -C 99 -i "$searchTerm" "$i" | head -n 1))
-		tempVar=$(egrep -il "$searchTerm" "$i")
-	        folderArray+=($(echo ${tempVar%/*}))
-	done
-	IFS=${old_IFS}
-
-	if [ "${nameArray[1]}" ]; then
-
-		PS3="Please choose a customer from the matched criteria: "
-
-		select cusOpt in "${nameArray[@]}"; do
-	        	case $cusOpt in
-	                	"${nameArray[0]}")
-	                        	CUSFOLDER="${folderArray[0]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[1]}")
-	                        	CUSFOLDER="${folderArray[1]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[2]}")
-	                        	CUSFOLDER="${folderArray[2]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[3]}")
-	                        	CUSFOLDER="${folderArray[3]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[4]}")
-	                        	CUSFOLDER="${folderArray[4]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[5]}")
-	                        	CUSFOLDER="${folderArray[5]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[6]}")
-	                        	CUSFOLDER="${folderArray[6]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[7]}")
-	                        	CUSFOLDER="${folderArray[7]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[8]}")
-	                        	CUSFOLDER="${folderArray[8]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-	                	"${nameArray[9]}")
-	                        	CUSFOLDER="${folderArray[9]}"
-					openNotesInfoChoice
-					break;
-	                        	;;
-				*)
-					echo "ERROR: YOU HAVE MADE AN INCORRECT CHOICE.";
-					echo "PLEASE CHOOSE ONE OF THE OPTIONS LISTED.";
-					sleep 3;
-					;;
-		        esac
-		done
-	else
-		CUSFOLDER="${folderArray[0]}"
-		openNotesInfoChoice
-	fi
+function main() {
+  choice=$(get_pcid ', or enter name to search for')
+  if [ "${choice:0:2}" == 'ID' ]; then
+    search_by_pcid
+  else
+    search_by_name
+  fi
 }
 
 main
-
-exit 0
