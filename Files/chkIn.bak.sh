@@ -212,10 +212,10 @@ print_worksheet() {
   #create temp file holding worksheet
   PRINTFILE=$(mktemp)
 
-  echo '					                Computer Resource								Contact Log' >> ${PRINTFILE}
-  echo '			   "Your Computer Resource for All Your Computer Needs"			________________' >> ${PRINTFILE}
-  echo '						          Hwy 90 Location								________________' >> ${PRINTFILE}
-  echo "							       PC ID: $pcid								________________" >> ${PRINTFILE}
+  echo '							                Computer Resource' >> ${PRINTFILE}
+  echo '					   "Your Computer Resource for All Your Computer Needs"' >> ${PRINTFILE}
+  echo '								          Hwy 90 Location' >> ${PRINTFILE}
+  echo "									       PC ID: $pcid" >> ${PRINTFILE}
   echo '------------------------------------------------------------------------------------------------------------------------------------' >> ${PRINTFILE}
   echo >> ${PRINTFILE}
   echo "Customer Name:   ${customerName}" >> ${PRINTFILE}
